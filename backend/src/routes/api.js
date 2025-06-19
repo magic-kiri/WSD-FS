@@ -60,6 +60,48 @@ router.get('/tasks', async (req, res, next) => {
 
     const query = {};
 
+    // Enhanced Status Filtering (Multi-select with OR logic)
+    if (status) {
+      const statusValues = Array.isArray(status) ? status : [status];
+      // TODO: Need to implement this with the status enum for reusability.
+      const validStatuses = ['pending', 'in-progress', 'completed'];
+      const invalidStatuses = statusValues.filter(
+        (s) => !validStatuses.includes(s)
+      );
+
+      if (invalidStatuses.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid status values: ${invalidStatuses.join(', ')}. Valid values: ${validStatuses.join(', ')}`
+        });
+      }
+
+      query.status =
+        statusValues.length === 1 ? statusValues[0] : { $in: statusValues };
+    }
+
+    // Enhanced Priority Filtering (Multi-select with OR logic)
+    if (priority) {
+      const priorityValues = Array.isArray(priority) ? priority : [priority];
+      // TODO: Need to implement this with the priority enum for reusability.
+      const validPriorities = ['low', 'medium', 'high'];
+      const invalidPriorities = priorityValues.filter(
+        (p) => !validPriorities.includes(p)
+      );
+
+      if (invalidPriorities.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid priority values: ${invalidPriorities.join(', ')}. Valid values: ${validPriorities.join(', ')}`
+        });
+      }
+
+      query.priority =
+        priorityValues.length === 1
+          ? priorityValues[0]
+          : { $in: priorityValues };
+    }
+
     // Created Date Range Filtering
     if (createdFrom || createdTo) {
       query.createdAt = {};
