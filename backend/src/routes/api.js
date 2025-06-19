@@ -35,6 +35,10 @@ export const setSocketHandlers = (handlers) => {
  * @param {number} [req.query.limit=10] - Number of tasks per page
  * @param {string} [req.query.status] - Filter by task status
  * @param {string} [req.query.priority] - Filter by task priority
+ * @param {string} [req.query.createdFrom] - Filter by task creation date range start
+ * @param {string} [req.query.createdTo] - Filter by task creation date range end
+ * @param {string} [req.query.completedFrom] - Filter by task completion date range start
+ * @param {string} [req.query.completedTo] - Filter by task completion date range end
  * @param {string} [req.query.sortBy=createdAt] - Field to sort by
  * @param {string} [req.query.sortOrder=desc] - Sort order (asc/desc)
  * @returns {Object} Paginated tasks with metadata
@@ -46,13 +50,73 @@ router.get('/tasks', async (req, res, next) => {
       limit = 10,
       status,
       priority,
+      createdFrom,
+      createdTo,
+      completedFrom,
+      completedTo,
       sortBy = 'createdAt',
       sortOrder = 'desc'
     } = req.query;
 
     const query = {};
-    if (status) query.status = status;
-    if (priority) query.priority = priority;
+
+    // Created Date Range Filtering
+    if (createdFrom || createdTo) {
+      query.createdAt = {};
+
+      if (createdFrom) {
+        const startDate = new Date(createdFrom);
+        if (isNaN(startDate.getTime())) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid createdFrom date format. Use YYYY-MM-DD'
+          });
+        }
+        startDate.setHours(0, 0, 0, 0);
+        query.createdAt.$gte = startDate;
+      }
+
+      if (createdTo) {
+        const endDate = new Date(createdTo);
+        if (isNaN(endDate.getTime())) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid createdTo date format. Use YYYY-MM-DD'
+          });
+        }
+        endDate.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = endDate;
+      }
+    }
+
+    // Completed Date Range Filtering
+    if (completedFrom || completedTo) {
+      query.completedAt = { $exists: true, $ne: null };
+
+      if (completedFrom) {
+        const startDate = new Date(completedFrom);
+        if (isNaN(startDate.getTime())) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid completedFrom date format. Use YYYY-MM-DD'
+          });
+        }
+        startDate.setHours(0, 0, 0, 0);
+        query.completedAt.$gte = startDate;
+      }
+
+      if (completedTo) {
+        const endDate = new Date(completedTo);
+        if (isNaN(endDate.getTime())) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid completedTo date format. Use YYYY-MM-DD'
+          });
+        }
+        endDate.setHours(23, 59, 59, 999);
+        query.completedAt.$lte = endDate;
+      }
+    }
 
     const sort = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
