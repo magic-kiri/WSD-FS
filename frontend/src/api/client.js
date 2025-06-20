@@ -64,7 +64,7 @@ class ApiClient {
    * @returns {Promise<Object>} API response data
    */
   async get(endpoint, params = {}) {
-    const searchParams = new window.URLSearchParams()
+    const searchParams = new URLSearchParams()
 
     // Handle array parameters properly
     Object.entries(params).forEach(([key, value]) => {
