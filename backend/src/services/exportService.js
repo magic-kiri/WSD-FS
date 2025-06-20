@@ -5,10 +5,7 @@
 
 import crypto from 'crypto';
 import Task from '../models/Task.js';
-import ExportHistory, {
-  EXPORT_FORMATS,
-  EXPORT_STATUSES
-} from '../models/ExportHistory.js';
+import ExportHistory, { EXPORT_FORMATS } from '../models/ExportHistory.js';
 import { redisClient } from '../config/redis.js';
 import {
   formatAsCSV,
@@ -79,10 +76,10 @@ class ExportService {
         Array.isArray(filters.status) && filters.status.length === 1
           ? filters.status[0]
           : {
-              $in: Array.isArray(filters.status)
-                ? filters.status
-                : [filters.status]
-            };
+            $in: Array.isArray(filters.status)
+              ? filters.status
+              : [filters.status]
+          };
     }
 
     // Priority filtering
@@ -91,10 +88,10 @@ class ExportService {
         Array.isArray(filters.priority) && filters.priority.length === 1
           ? filters.priority[0]
           : {
-              $in: Array.isArray(filters.priority)
-                ? filters.priority
-                : [filters.priority]
-            };
+            $in: Array.isArray(filters.priority)
+              ? filters.priority
+              : [filters.priority]
+          };
     }
 
     // Date range filtering for createdAt
@@ -306,14 +303,14 @@ class ExportService {
       let formattedData;
 
       switch (format) {
-        case 'csv':
-          formattedData = formatAsCSV(taskData);
-          break;
-        case 'json':
-          formattedData = formatAsJSON(taskData);
-          break;
-        default:
-          throw new Error(`Unsupported format: ${format}`);
+      case 'csv':
+        formattedData = formatAsCSV(taskData);
+        break;
+      case 'json':
+        formattedData = formatAsJSON(taskData);
+        break;
+      default:
+        throw new Error(`Unsupported format: ${format}`);
       }
 
       const fileSize = Buffer.byteLength(formattedData, 'utf8');
@@ -518,16 +515,16 @@ class ExportService {
    */
   static calculateProgress(status) {
     switch (status) {
-      case 'pending':
-        return 0;
-      case 'processing':
-        return 50;
-      case 'completed':
-        return 100;
-      case 'failed':
-        return 0;
-      default:
-        return 0;
+    case 'pending':
+      return 0;
+    case 'processing':
+      return 50;
+    case 'completed':
+      return 100;
+    case 'failed':
+      return 0;
+    default:
+      return 0;
     }
   }
 
@@ -561,12 +558,12 @@ class ExportService {
    */
   static getMimeType(format) {
     switch (format) {
-      case 'csv':
-        return 'text/csv';
-      case 'json':
-        return 'application/json';
-      default:
-        return 'application/octet-stream';
+    case 'csv':
+      return 'text/csv';
+    case 'json':
+      return 'application/json';
+    default:
+      return 'application/octet-stream';
     }
   }
 
