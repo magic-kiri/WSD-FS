@@ -51,6 +51,34 @@ export const setSocketHandlers = (handlers) => {
 };
 
 /**
+ * Validates a date string more strictly than JavaScript's Date constructor
+ * @param {string} dateString - Date string in YYYY-MM-DD format
+ * @returns {boolean} True if valid, false otherwise
+ */
+const isValidDate = (dateString) => {
+  // Check format first
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(dateString)) {
+    return false;
+  }
+
+  const date = new Date(dateString);
+
+  // Check if date is valid and matches the input
+  if (isNaN(date.getTime())) {
+    return false;
+  }
+
+  // Ensure the date components match the input (catches invalid dates like 2023-02-29)
+  const [year, month, day] = dateString.split('-').map(Number);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 && // Month is 0-indexed
+    date.getDate() === day
+  );
+};
+
+/**
  * Validates enum values against allowed values
  * @param {Array|string} values - Values to validate
  * @param {Array} allowedValues - Array of allowed values
@@ -174,25 +202,25 @@ router.get('/tasks', async (req, res, next) => {
       query.createdAt = {};
 
       if (createdFrom) {
-        const startDate = new Date(createdFrom);
-        if (isNaN(startDate.getTime())) {
+        if (!isValidDate(createdFrom)) {
           return res.status(400).json({
             success: false,
             message: 'Invalid createdFrom date format. Use YYYY-MM-DD'
           });
         }
+        const startDate = new Date(createdFrom);
         startDate.setHours(0, 0, 0, 0);
         query.createdAt.$gte = startDate;
       }
 
       if (createdTo) {
-        const endDate = new Date(createdTo);
-        if (isNaN(endDate.getTime())) {
+        if (!isValidDate(createdTo)) {
           return res.status(400).json({
             success: false,
             message: 'Invalid createdTo date format. Use YYYY-MM-DD'
           });
         }
+        const endDate = new Date(createdTo);
         endDate.setHours(23, 59, 59, 999);
         query.createdAt.$lte = endDate;
       }
@@ -203,25 +231,25 @@ router.get('/tasks', async (req, res, next) => {
       query.completedAt = { $exists: true, $ne: null };
 
       if (completedFrom) {
-        const startDate = new Date(completedFrom);
-        if (isNaN(startDate.getTime())) {
+        if (!isValidDate(completedFrom)) {
           return res.status(400).json({
             success: false,
             message: 'Invalid completedFrom date format. Use YYYY-MM-DD'
           });
         }
+        const startDate = new Date(completedFrom);
         startDate.setHours(0, 0, 0, 0);
         query.completedAt.$gte = startDate;
       }
 
       if (completedTo) {
-        const endDate = new Date(completedTo);
-        if (isNaN(endDate.getTime())) {
+        if (!isValidDate(completedTo)) {
           return res.status(400).json({
             success: false,
             message: 'Invalid completedTo date format. Use YYYY-MM-DD'
           });
         }
+        const endDate = new Date(completedTo);
         endDate.setHours(23, 59, 59, 999);
         query.completedAt.$lte = endDate;
       }
