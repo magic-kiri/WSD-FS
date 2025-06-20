@@ -6,6 +6,9 @@
 import express from 'express';
 import Task, { TASK_STATUSES, TASK_PRIORITIES } from '../models/Task.js';
 import AnalyticsService from '../services/analyticsService.js';
+import exportsRouter, {
+  setSocketHandlers as setExportsSocketHandlers
+} from './exports.js';
 import { redisClient } from '../config/redis.js';
 
 const router = express.Router();
@@ -48,6 +51,8 @@ const VALID_SORT_ORDERS = ['asc', 'desc'];
  */
 export const setSocketHandlers = (handlers) => {
   socketHandlers = handlers;
+  // Also set socket handlers for exports router
+  setExportsSocketHandlers(handlers);
 };
 
 /**
@@ -487,5 +492,8 @@ router.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Mount exports router
+router.use('/exports', exportsRouter);
 
 export default router;
