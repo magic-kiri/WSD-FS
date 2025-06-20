@@ -22,7 +22,13 @@ export default [
         localStorage: 'readonly',
         sessionStorage: 'readonly',
         fetch: 'readonly',
-        URLSearchParams: 'readonly'
+        URLSearchParams: 'readonly',
+        URL: 'readonly',
+        Blob: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly'
       }
     },
     rules: {
@@ -51,7 +57,9 @@ export default [
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
-        Buffer: 'readonly'
+        Buffer: 'readonly',
+        URL: 'readonly',
+        Blob: 'readonly'
       }
     }
   }
