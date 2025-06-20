@@ -25,8 +25,8 @@ export const useTaskStore = defineStore('tasks', () => {
   })
 
   const filters = ref({
-    status: '',
-    priority: '',
+    status: [],
+    priority: [],
     sortBy: 'createdAt',
     sortOrder: 'desc'
   })

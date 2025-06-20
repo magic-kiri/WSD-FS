@@ -64,7 +64,19 @@ class ApiClient {
    * @returns {Promise<Object>} API response data
    */
   async get(endpoint, params = {}) {
-    const query = new window.URLSearchParams(params).toString()
+    const searchParams = new window.URLSearchParams()
+
+    // Handle array parameters properly
+    Object.entries(params).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        // Append each array element as a separate query parameter
+        value.forEach((item) => searchParams.append(key, item))
+      } else if (value !== null && value !== undefined && value !== '') {
+        searchParams.append(key, value)
+      }
+    })
+
+    const query = searchParams.toString()
     const url = query ? `${endpoint}?${query}` : endpoint
     return this.request(url, { method: 'GET' })
   }

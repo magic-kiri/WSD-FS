@@ -28,6 +28,8 @@
               v-model="filters.status"
               :items="statusOptions"
               label="Status"
+              multiple
+              chips
               clearable
               @update:model-value="updateFilters"
             ></v-select>
@@ -37,6 +39,8 @@
               v-model="filters.priority"
               :items="priorityOptions"
               label="Priority"
+              multiple
+              chips
               clearable
               @update:model-value="updateFilters"
             ></v-select>
@@ -167,6 +171,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useTaskStore } from '../stores/taskStore.js'
 import TaskFormDialog from './TaskFormDialog.vue'
+import { STATUS_OPTIONS, PRIORITY_OPTIONS } from '../constants/taskEnums.js'
 
 const taskStore = useTaskStore()
 
@@ -176,8 +181,8 @@ const showDeleteDialog = ref(false)
 const selectedTask = ref(null)
 
 const filters = reactive({
-  status: '',
-  priority: '',
+  status: [],
+  priority: [],
   sortBy: 'createdAt',
   sortOrder: 'desc'
 })
