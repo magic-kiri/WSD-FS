@@ -6,6 +6,18 @@
 import mongoose from 'mongoose';
 
 /**
+ * Task status enum values
+ * @constant {Array<string>}
+ */
+export const TASK_STATUSES = ['pending', 'in-progress', 'completed'];
+
+/**
+ * Task priority enum values
+ * @constant {Array<string>}
+ */
+export const TASK_PRIORITIES = ['low', 'medium', 'high'];
+
+/**
  * Mongoose schema for Task documents
  * @typedef {Object} TaskSchema
  * @property {string} title - Task title (required, max 200 chars)
@@ -18,54 +30,57 @@ import mongoose from 'mongoose';
  * @property {number} estimatedTime - Estimated completion time in minutes
  * @property {number} actualTime - Actual completion time in minutes
  */
-const taskSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 200
+const taskSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 200
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 1000
+    },
+    status: {
+      type: String,
+      enum: TASK_STATUSES,
+      default: 'pending',
+      index: true
+    },
+    priority: {
+      type: String,
+      enum: TASK_PRIORITIES,
+      default: 'medium',
+      index: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      index: true
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now
+    },
+    completedAt: {
+      type: Date,
+      default: null
+    },
+    estimatedTime: {
+      type: Number,
+      min: 0
+    },
+    actualTime: {
+      type: Number,
+      min: 0
+    }
   },
-  description: {
-    type: String,
-    trim: true,
-    maxlength: 1000
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'in-progress', 'completed'],
-    default: 'pending',
-    index: true
-  },
-  priority: {
-    type: String,
-    enum: ['low', 'medium', 'high'],
-    default: 'medium',
-    index: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-    index: true
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  },
-  completedAt: {
-    type: Date,
-    default: null
-  },
-  estimatedTime: {
-    type: Number,
-    min: 0
-  },
-  actualTime: {
-    type: Number,
-    min: 0
+  {
+    timestamps: true
   }
-}, {
-  timestamps: true
-});
+);
 
 // Compound indexes for efficient queries
 taskSchema.index({ status: 1, priority: 1 });
@@ -75,7 +90,7 @@ taskSchema.index({ createdAt: -1 });
  * Pre-save middleware to automatically set completedAt when status changes to completed
  * @param {Function} next - Mongoose next function
  */
-taskSchema.pre('save', function(next) {
+taskSchema.pre('save', function (next) {
   if (this.isModified('status')) {
     if (this.status === 'completed' && !this.completedAt) {
       this.completedAt = new Date();
@@ -94,7 +109,7 @@ taskSchema.pre('save', function(next) {
  * const task = await Task.findById(taskId);
  * const completionTime = task.calculateCompletionTime(); // returns minutes or null
  */
-taskSchema.methods.calculateCompletionTime = function() {
+taskSchema.methods.calculateCompletionTime = function () {
   if (this.completedAt && this.createdAt) {
     return Math.floor((this.completedAt - this.createdAt) / (1000 * 60));
   }

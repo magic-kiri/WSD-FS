@@ -4,7 +4,7 @@
  */
 
 import express from 'express';
-import Task from '../models/Task.js';
+import Task, { TASK_STATUSES, TASK_PRIORITIES } from '../models/Task.js';
 import AnalyticsService from '../services/analyticsService.js';
 import { redisClient } from '../config/redis.js';
 
@@ -27,14 +27,47 @@ export const setSocketHandlers = (handlers) => {
 };
 
 /**
+ * Validates enum values against allowed values
+ * @param {Array|string} values - Values to validate
+ * @param {Array} allowedValues - Array of allowed values
+ * @param {string} fieldName - Name of the field for error messages
+ * @returns {Object} Validation result with isValid and error properties
+ */
+const validateEnumValues = (values, allowedValues, fieldName) => {
+  const valueArray = Array.isArray(values) ? values : [values];
+  const invalidValues = valueArray.filter(
+    (value) => !allowedValues.includes(value)
+  );
+
+  if (invalidValues.length > 0) {
+    return {
+      isValid: false,
+      error: `Invalid ${fieldName} values: ${invalidValues.join(', ')}. Valid values: ${allowedValues.join(', ')}`
+    };
+  }
+
+  return { isValid: true };
+};
+
+/**
+ * Creates MongoDB query for multi-select filtering
+ * @param {Array|string} values - Values to filter by
+ * @returns {Object|string} MongoDB query object or single value
+ */
+const createMultiSelectQuery = (values) => {
+  const valueArray = Array.isArray(values) ? values : [values];
+  return valueArray.length === 1 ? valueArray[0] : { $in: valueArray };
+};
+
+/**
  * GET /tasks - Retrieve tasks with pagination, filtering, and sorting
  * @name GetTasks
  * @function
  * @param {Object} req.query - Query parameters
  * @param {number} [req.query.page=1] - Page number for pagination
  * @param {number} [req.query.limit=10] - Number of tasks per page
- * @param {string} [req.query.status] - Filter by task status
- * @param {string} [req.query.priority] - Filter by task priority
+ * @param {string|Array} [req.query.status] - Filter by task status (supports multi-select)
+ * @param {string|Array} [req.query.priority] - Filter by task priority (supports multi-select)
  * @param {string} [req.query.createdFrom] - Filter by task creation date range start
  * @param {string} [req.query.createdTo] - Filter by task creation date range end
  * @param {string} [req.query.completedFrom] - Filter by task completion date range start
@@ -60,46 +93,32 @@ router.get('/tasks', async (req, res, next) => {
 
     const query = {};
 
-    // Enhanced Status Filtering (Multi-select with OR logic)
+    // Enhanced Status Filtering with reusable validation
     if (status) {
-      const statusValues = Array.isArray(status) ? status : [status];
-      // TODO: Need to implement this with the status enum for reusability.
-      const validStatuses = ['pending', 'in-progress', 'completed'];
-      const invalidStatuses = statusValues.filter(
-        (s) => !validStatuses.includes(s)
-      );
-
-      if (invalidStatuses.length > 0) {
+      const validation = validateEnumValues(status, TASK_STATUSES, 'status');
+      if (!validation.isValid) {
         return res.status(400).json({
           success: false,
-          message: `Invalid status values: ${invalidStatuses.join(', ')}. Valid values: ${validStatuses.join(', ')}`
+          message: validation.error
         });
       }
-
-      query.status =
-        statusValues.length === 1 ? statusValues[0] : { $in: statusValues };
+      query.status = createMultiSelectQuery(status);
     }
 
-    // Enhanced Priority Filtering (Multi-select with OR logic)
+    // Enhanced Priority Filtering with reusable validation
     if (priority) {
-      const priorityValues = Array.isArray(priority) ? priority : [priority];
-      // TODO: Need to implement this with the priority enum for reusability.
-      const validPriorities = ['low', 'medium', 'high'];
-      const invalidPriorities = priorityValues.filter(
-        (p) => !validPriorities.includes(p)
+      const validation = validateEnumValues(
+        priority,
+        TASK_PRIORITIES,
+        'priority'
       );
-
-      if (invalidPriorities.length > 0) {
+      if (!validation.isValid) {
         return res.status(400).json({
           success: false,
-          message: `Invalid priority values: ${invalidPriorities.join(', ')}. Valid values: ${validPriorities.join(', ')}`
+          message: validation.error
         });
       }
-
-      query.priority =
-        priorityValues.length === 1
-          ? priorityValues[0]
-          : { $in: priorityValues };
+      query.priority = createMultiSelectQuery(priority);
     }
 
     // Created Date Range Filtering
