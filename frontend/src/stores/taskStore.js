@@ -78,8 +78,14 @@ export const useTaskStore = defineStore('tasks', () => {
         ...params
       }
 
+      // Clean up empty arrays and falsy values
       Object.keys(queryParams).forEach((key) => {
-        if (!queryParams[key]) delete queryParams[key]
+        if (
+          !queryParams[key] ||
+          (Array.isArray(queryParams[key]) && queryParams[key].length === 0)
+        ) {
+          delete queryParams[key]
+        }
       })
 
       const response = await apiClient.getTasks(queryParams)
