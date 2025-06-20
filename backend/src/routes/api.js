@@ -17,6 +17,30 @@ const router = express.Router();
 let socketHandlers = null;
 
 /**
+ * Valid sort fields based on Task schema
+ * @constant {Array<string>}
+ */
+const VALID_SORT_FIELDS = Object.keys(Task.schema.paths).filter((field) =>
+  // Include main fields that make sense for sorting
+  [
+    'title',
+    'status',
+    'priority',
+    'createdAt',
+    'updatedAt',
+    'completedAt',
+    'estimatedTime',
+    'actualTime'
+  ].includes(field)
+);
+
+/**
+ * Valid sort orders
+ * @constant {Array<string>}
+ */
+const VALID_SORT_ORDERS = ['asc', 'desc'];
+
+/**
  * Sets socket handlers for broadcasting real-time updates
  * @param {Object} handlers - Socket handler object with broadcast methods
  * @example
@@ -43,6 +67,30 @@ const validateEnumValues = (values, allowedValues, fieldName) => {
     return {
       isValid: false,
       error: `Invalid ${fieldName} values: ${invalidValues.join(', ')}. Valid values: ${allowedValues.join(', ')}`
+    };
+  }
+
+  return { isValid: true };
+};
+
+/**
+ * Validates sort parameters
+ * @param {string} sortBy - Field to sort by
+ * @param {string} sortOrder - Sort order (asc/desc)
+ * @returns {Object} Validation result with isValid and error properties
+ */
+const validateSortParams = (sortBy, sortOrder) => {
+  if (!VALID_SORT_FIELDS.includes(sortBy)) {
+    return {
+      isValid: false,
+      error: `Invalid sortBy field: ${sortBy}. Valid fields: ${VALID_SORT_FIELDS.join(', ')}`
+    };
+  }
+
+  if (!VALID_SORT_ORDERS.includes(sortOrder)) {
+    return {
+      isValid: false,
+      error: `Invalid sortOrder: ${sortOrder}. Valid orders: ${VALID_SORT_ORDERS.join(', ')}`
     };
   }
 
@@ -177,6 +225,15 @@ router.get('/tasks', async (req, res, next) => {
         endDate.setHours(23, 59, 59, 999);
         query.completedAt.$lte = endDate;
       }
+    }
+
+    // Sort validation
+    const sortValidation = validateSortParams(sortBy, sortOrder);
+    if (!sortValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: sortValidation.error
+      });
     }
 
     const sort = {};
