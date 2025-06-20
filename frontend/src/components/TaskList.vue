@@ -182,17 +182,8 @@ const filters = reactive({
   sortOrder: 'desc'
 })
 
-const statusOptions = [
-  { title: 'Pending', value: 'pending' },
-  { title: 'In Progress', value: 'in-progress' },
-  { title: 'Completed', value: 'completed' }
-]
-
-const priorityOptions = [
-  { title: 'Low', value: 'low' },
-  { title: 'Medium', value: 'medium' },
-  { title: 'High', value: 'high' }
-]
+const statusOptions = STATUS_OPTIONS
+const priorityOptions = PRIORITY_OPTIONS
 
 const sortOptions = [
   { title: 'Created Date', value: 'createdAt' },

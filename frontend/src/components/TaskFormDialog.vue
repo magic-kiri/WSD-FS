@@ -97,6 +97,7 @@
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
 import { useTaskStore } from '../stores/taskStore.js'
+import { STATUS_OPTIONS, PRIORITY_OPTIONS } from '../constants/taskEnums.js'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -124,17 +125,8 @@ const formData = reactive({
   actualTime: null
 })
 
-const priorityOptions = [
-  { title: 'Low', value: 'low' },
-  { title: 'Medium', value: 'medium' },
-  { title: 'High', value: 'high' }
-]
-
-const statusOptions = [
-  { title: 'Pending', value: 'pending' },
-  { title: 'In Progress', value: 'in-progress' },
-  { title: 'Completed', value: 'completed' }
-]
+const priorityOptions = PRIORITY_OPTIONS
+const statusOptions = STATUS_OPTIONS
 
 const titleRules = [
   (v) => !!v || 'Title is required',
