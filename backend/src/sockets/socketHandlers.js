@@ -32,13 +32,32 @@ class SocketHandlers {
         console.log(`📊 Client ${socket.id} joined analytics room`);
       });
 
+      socket.on('join-exports', (exportId) => {
+        if (exportId) {
+          socket.join(`export-${exportId}`);
+          console.log(`📥 Client ${socket.id} joined export room: ${exportId}`);
+
+          // Send confirmation that client has joined the room
+          socket.emit('export-room-joined', { exportId });
+        }
+      });
+
+      socket.on('leave-exports', (exportId) => {
+        if (exportId) {
+          socket.leave(`export-${exportId}`);
+          console.log(`📤 Client ${socket.id} left export room: ${exportId}`);
+        }
+      });
+
       socket.on('request-analytics', async () => {
         try {
           const metrics = await AnalyticsService.getTaskMetrics();
           socket.emit('analytics-update', metrics);
         } catch (error) {
           console.error('Error sending analytics update:', error);
-          socket.emit('analytics-error', { message: 'Failed to get analytics data' });
+          socket.emit('analytics-error', {
+            message: 'Failed to get analytics data'
+          });
         }
       });
 
@@ -78,9 +97,71 @@ class SocketHandlers {
   }
 
   /**
+   * Broadcasts export progress updates to clients monitoring specific export
+   * @param {string} exportId - Export identifier
+   * @param {number} progress - Progress percentage (0-100)
+   * @param {string} message - Progress message
+   */
+  broadcastExportProgress(exportId, progress, message) {
+    console.log(`📊 Export ${exportId}: ${progress}% - ${message}`);
+    this.io.to(`export-${exportId}`).emit('export-progress', {
+      exportId,
+      progress,
+      message,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  /**
+   * Broadcasts export completion notification
+   * @param {string} exportId - Export identifier
+   * @param {Object} result - Export result data
+   */
+  broadcastExportCompleted(exportId, result) {
+    this.io.to(`export-${exportId}`).emit('export-completed', {
+      exportId,
+      result,
+      timestamp: new Date().toISOString()
+    });
+
+    // Broadcast to all clients that a new export is available
+    this.io.emit('new-export-available', {
+      exportId,
+      result,
+      timestamp: new Date().toISOString()
+    });
+
+    // Also broadcast general notification
+    this.broadcastNotification(
+      `✅ Export completed: ${result.taskCount} tasks in ${result.format.toUpperCase()} format`,
+      'success'
+    );
+
+    console.log(`✅ Export ${exportId} completed: ${result.taskCount} tasks`);
+  }
+
+  /**
+   * Broadcasts export error notification
+   * @param {string} exportId - Export identifier
+   * @param {string} errorMessage - Error message
+   */
+  broadcastExportError(exportId, errorMessage) {
+    this.io.to(`export-${exportId}`).emit('export-error', {
+      exportId,
+      error: errorMessage,
+      timestamp: new Date().toISOString()
+    });
+
+    // Also broadcast general notification
+    this.broadcastNotification(`❌ Export failed: ${errorMessage}`, 'error');
+
+    console.error(`❌ Export ${exportId} failed: ${errorMessage}`);
+  }
+
+  /**
    * Broadcasts notifications to all connected clients
    * @param {string} message - Notification message
-   * @param {string} [type='info'] - Notification type (info, warning, error)
+   * @param {string} [type='info'] - Notification type (info, success, warning, error)
    */
   broadcastNotification(message, type = 'info') {
     this.io.emit('notification', {

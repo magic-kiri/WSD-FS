@@ -1,11 +1,48 @@
-import { test, describe } from 'node:test';
+import { test, describe, after } from 'node:test';
 import assert from 'node:assert';
-import express from 'express';
 
 // Import the router and function
 import router, { setSocketHandlers } from '../../src/routes/api.js';
 
-describe('API Routes Unit Tests', () => {
+describe('API Routes Unit Tests', { timeout: 10000 }, () => {
+  after(async () => {
+    // Clean up all persistent connections to prevent hanging
+    try {
+      // 1. Clean up Redis connections
+      const { redisClient } = await import('../../src/config/redis.js');
+      if (redisClient && redisClient.disconnect) {
+        await redisClient.disconnect();
+      }
+    } catch (error) {
+      console.log('Redis cleanup failed:', error.message);
+    }
+
+    try {
+      // 2. Clean up BullMQ queue connections
+      const { exportQueue } = await import('../../src/config/queue.js');
+      if (exportQueue && exportQueue.close) {
+        await exportQueue.close();
+      }
+    } catch (error) {
+      console.log('Queue cleanup failed:', error.message);
+    }
+
+    try {
+      // 3. Clean up Mongoose connections
+      const mongoose = await import('mongoose');
+      if (mongoose.default.connection.readyState !== 0) {
+        await mongoose.default.connection.close();
+      }
+    } catch (error) {
+      console.log('Mongoose cleanup failed:', error.message);
+    }
+
+    // Force exit after cleanup
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
+  });
+
   test('should export setSocketHandlers function', () => {
     assert(typeof setSocketHandlers === 'function');
   });
@@ -37,27 +74,35 @@ describe('API Routes Unit Tests', () => {
   test('should have routes registered', () => {
     // The router should have routes registered
     assert(router.stack.length > 0);
-    
+
     // Check for specific route patterns
-    const routes = router.stack.map(layer => ({
+    const routes = router.stack.map((layer) => ({
       method: Object.keys(layer.route?.methods || {})[0],
       path: layer.route?.path
     }));
 
     // Should have GET /tasks route
-    const tasksRoute = routes.find(r => r.path === '/tasks' && r.method === 'get');
+    const tasksRoute = routes.find(
+      (r) => r.path === '/tasks' && r.method === 'get'
+    );
     assert(tasksRoute, 'Should have GET /tasks route');
 
-    // Should have POST /tasks route  
-    const createTaskRoute = routes.find(r => r.path === '/tasks' && r.method === 'post');
+    // Should have POST /tasks route
+    const createTaskRoute = routes.find(
+      (r) => r.path === '/tasks' && r.method === 'post'
+    );
     assert(createTaskRoute, 'Should have POST /tasks route');
 
     // Should have health route
-    const healthRoute = routes.find(r => r.path === '/health' && r.method === 'get');
+    const healthRoute = routes.find(
+      (r) => r.path === '/health' && r.method === 'get'
+    );
     assert(healthRoute, 'Should have GET /health route');
 
     // Should have analytics route
-    const analyticsRoute = routes.find(r => r.path === '/analytics' && r.method === 'get');
+    const analyticsRoute = routes.find(
+      (r) => r.path === '/analytics' && r.method === 'get'
+    );
     assert(analyticsRoute, 'Should have GET /analytics route');
   });
 
@@ -68,7 +113,7 @@ describe('API Routes Unit Tests', () => {
     };
 
     setSocketHandlers(mockHandlers);
-    
+
     // Verify handlers are set (can't test directly, but no error should be thrown)
     assert(true);
   });

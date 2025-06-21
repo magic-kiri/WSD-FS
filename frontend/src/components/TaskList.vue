@@ -14,52 +14,19 @@
     <div class="d-flex align-center mb-4">
       <h2 class="page-title">Tasks</h2>
       <v-spacer></v-spacer>
-      <v-btn color="primary" @click="showCreateDialog = true">
-        <v-icon left>mdi-plus</v-icon>
-        New Task
-      </v-btn>
+      <div class="d-flex ga-2">
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          @click="showCreateDialog = true"
+        >
+          New Task
+        </v-btn>
+      </div>
     </div>
 
-    <v-card class="mb-4">
-      <v-card-text>
-        <v-row>
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="filters.status"
-              :items="statusOptions"
-              label="Status"
-              clearable
-              @update:model-value="updateFilters"
-            ></v-select>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="filters.priority"
-              :items="priorityOptions"
-              label="Priority"
-              clearable
-              @update:model-value="updateFilters"
-            ></v-select>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="filters.sortBy"
-              :items="sortOptions"
-              label="Sort by"
-              @update:model-value="updateFilters"
-            ></v-select>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="filters.sortOrder"
-              :items="orderOptions"
-              label="Order"
-              @update:model-value="updateFilters"
-            ></v-select>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
+    <!-- Enhanced Filter Bar -->
+    <filter-bar />
 
     <div v-if="taskStore.loading" class="text-center py-8">
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
@@ -71,7 +38,20 @@
 
     <div v-else-if="taskStore.tasks.length === 0" class="text-center py-8">
       <v-icon size="64" color="grey-lighten-1">mdi-format-list-checks</v-icon>
-      <p class="text-grey mt-2">No tasks found</p>
+      <p class="text-grey mt-2">
+        {{
+          taskStore.activeFilterCount > 0
+            ? 'No tasks match your filters'
+            : 'No tasks found'
+        }}
+      </p>
+      <v-btn
+        v-if="taskStore.activeFilterCount > 0"
+        variant="outlined"
+        @click="taskStore.clearAllFilters"
+      >
+        Clear Filters
+      </v-btn>
     </div>
 
     <div v-else>
@@ -103,10 +83,13 @@
                 >
                   {{ formatPriority(task.priority) }}
                 </v-chip>
-                <span class="text-caption">
+                <span class="text-caption text-medium-emphasis">
                   Created {{ formatDate(task.createdAt) }}
                 </span>
-                <span v-if="task.completedAt" class="text-caption">
+                <span
+                  v-if="task.completedAt"
+                  class="text-caption text-medium-emphasis"
+                >
                   Completed {{ formatDate(task.completedAt) }}
                 </span>
               </div>
@@ -147,6 +130,9 @@
       @save="handleSave"
     />
 
+    <!-- Export Modal -->
+    <export-modal v-model="showExportModal" />
+
     <v-dialog v-model="showDeleteDialog" max-width="400">
       <v-card>
         <v-card-title>Delete Task</v-card-title>
@@ -164,117 +150,159 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useTaskStore } from '../stores/taskStore.js'
+import { useFilterUrl } from '../composables/useFilterUrl.js'
 import TaskFormDialog from './TaskFormDialog.vue'
+import FilterBar from './FilterBar.vue'
+import ExportModal from './ExportModal.vue'
 
 const taskStore = useTaskStore()
+const { initializeFromUrl } = useFilterUrl()
 
 const showCreateDialog = ref(false)
 const showEditDialog = ref(false)
 const showDeleteDialog = ref(false)
+const showExportModal = ref(false)
 const selectedTask = ref(null)
 
-const filters = reactive({
-  status: '',
-  priority: '',
-  sortBy: 'createdAt',
-  sortOrder: 'desc'
-})
-
-const statusOptions = [
-  { title: 'Pending', value: 'pending' },
-  { title: 'In Progress', value: 'in-progress' },
-  { title: 'Completed', value: 'completed' }
-]
-
-const priorityOptions = [
-  { title: 'Low', value: 'low' },
-  { title: 'Medium', value: 'medium' },
-  { title: 'High', value: 'high' }
-]
-
-const sortOptions = [
-  { title: 'Created Date', value: 'createdAt' },
-  { title: 'Updated Date', value: 'updatedAt' },
-  { title: 'Title', value: 'title' },
-  { title: 'Priority', value: 'priority' },
-  { title: 'Status', value: 'status' }
-]
-
-const orderOptions = [
-  { title: 'Newest First', value: 'desc' },
-  { title: 'Oldest First', value: 'asc' }
-]
-
-function updateFilters() {
-  taskStore.updateFilters(filters)
+const getStatusColor = (status) => {
+  const colors = {
+    pending: 'orange',
+    'in-progress': 'blue',
+    completed: 'green'
+  }
+  return colors[status] || 'grey'
 }
 
-function editTask(task) {
+const getPriorityColor = (priority) => {
+  const colors = {
+    low: 'green',
+    medium: 'orange',
+    high: 'red'
+  }
+  return colors[priority] || 'grey'
+}
+
+const formatStatus = (status) => {
+  const formats = {
+    pending: 'Pending',
+    'in-progress': 'In Progress',
+    completed: 'Completed'
+  }
+  return formats[status] || status
+}
+
+const formatPriority = (priority) => {
+  return priority.charAt(0).toUpperCase() + priority.slice(1)
+}
+
+const formatDate = (date) => {
+  if (!date) {
+    console.warn('🔍 formatDate received null/undefined date:', date)
+    return 'No date'
+  }
+
+  try {
+    const dateObj = new Date(date)
+
+    // Check if the date is valid
+    if (isNaN(dateObj.getTime())) {
+      console.warn('🔍 formatDate received invalid date:', date)
+      return 'Invalid date'
+    }
+    const formatted = dateObj.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+
+    return formatted
+  } catch (error) {
+    console.error('🔍 Error formatting date:', error, 'Original date:', date)
+    return 'Date error'
+  }
+}
+
+const editTask = (task) => {
   selectedTask.value = task
   showEditDialog.value = true
 }
 
-function deleteTask(task) {
+const deleteTask = (task) => {
   selectedTask.value = task
   showDeleteDialog.value = true
 }
 
-async function handleSave() {
+const handleSave = async () => {
+  // TaskFormDialog already handles the API call
+  // We just need to close the dialogs and reset state
   showCreateDialog.value = false
   showEditDialog.value = false
   selectedTask.value = null
-  await taskStore.fetchTasks()
 }
 
-async function confirmDelete() {
-  if (selectedTask.value) {
+const confirmDelete = async () => {
+  try {
     await taskStore.deleteTask(selectedTask.value._id)
     showDeleteDialog.value = false
     selectedTask.value = null
+  } catch (error) {
+    console.error('Error deleting task:', error)
   }
-}
-
-function getStatusColor(status) {
-  switch (status) {
-    case 'pending':
-      return 'warning'
-    case 'in-progress':
-      return 'info'
-    case 'completed':
-      return 'success'
-    default:
-      return 'grey'
-  }
-}
-
-function getPriorityColor(priority) {
-  switch (priority) {
-    case 'low':
-      return 'success'
-    case 'medium':
-      return 'warning'
-    case 'high':
-      return 'error'
-    default:
-      return 'grey'
-  }
-}
-
-function formatStatus(status) {
-  return status.replace('-', ' ').replace(/\b\w/g, (l) => l.toUpperCase())
-}
-
-function formatPriority(priority) {
-  return priority.charAt(0).toUpperCase() + priority.slice(1)
-}
-
-function formatDate(date) {
-  return new Date(date).toLocaleDateString()
 }
 
 onMounted(() => {
-  taskStore.fetchTasks()
+  // Initialize socket listeners
+  taskStore.initializeSocketListeners()
+
+  // Initialize URL filters - this will also trigger fetchTasks
+  initializeFromUrl()
+
+  // If no URL filters and no tasks loaded, fetch with default filters
+  if (taskStore.tasks.length === 0 && !taskStore.loading) {
+    taskStore.fetchTasks()
+  }
+})
+
+onUnmounted(() => {
+  taskStore.cleanup()
 })
 </script>
+
+<style scoped>
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.task-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.task-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.task-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.task-meta .v-chip {
+  margin-right: 0;
+}
+</style>

@@ -25,10 +25,133 @@ export const useTaskStore = defineStore('tasks', () => {
   })
 
   const filters = ref({
-    status: '',
-    priority: '',
+    status: [],
+    priority: [],
+    text: '',
+    createdFrom: null,
+    createdTo: null,
+    completedFrom: null,
+    completedTo: null,
     sortBy: 'createdAt',
     sortOrder: 'desc'
+  })
+
+  // Filter presets for quick access
+  const filterPresets = ref([
+    {
+      name: 'Overdue Tasks',
+      filters: {
+        status: ['pending', 'in-progress'],
+        createdTo: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0]
+      }
+    },
+    {
+      name: 'This Week Completed',
+      filters: {
+        status: ['completed'],
+        completedFrom: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
+        completedTo: new Date().toISOString().split('T')[0]
+      }
+    },
+    {
+      name: 'High Priority Pending',
+      filters: {
+        status: ['pending'],
+        priority: ['high']
+      }
+    },
+    {
+      name: 'Recently Created',
+      filters: {
+        createdFrom: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      }
+    }
+  ])
+
+  // Active filter tracking
+  const activeFilterCount = computed(() => {
+    let count = 0
+    if (filters.value.status?.length > 0) count++
+    if (filters.value.priority?.length > 0) count++
+    if (filters.value.text?.trim()) count++
+    if (filters.value.createdFrom) count++
+    if (filters.value.createdTo) count++
+    if (filters.value.completedFrom) count++
+    if (filters.value.completedTo) count++
+    return count
+  })
+
+  // Active filter chips for display
+  const activeFilterChips = computed(() => {
+    const chips = []
+
+    if (filters.value.status?.length > 0) {
+      chips.push({
+        key: 'status',
+        label: `Status: ${filters.value.status.join(', ')}`,
+        value: filters.value.status
+      })
+    }
+
+    if (filters.value.priority?.length > 0) {
+      chips.push({
+        key: 'priority',
+        label: `Priority: ${filters.value.priority.join(', ')}`,
+        value: filters.value.priority
+      })
+    }
+
+    if (filters.value.text?.trim()) {
+      chips.push({
+        key: 'text',
+        label: `Search: "${filters.value.text}"`,
+        value: filters.value.text
+      })
+    }
+
+    if (filters.value.createdFrom || filters.value.createdTo) {
+      const from = filters.value.createdFrom
+        ? new Date(filters.value.createdFrom).toLocaleDateString()
+        : 'any'
+      const to = filters.value.createdTo
+        ? new Date(filters.value.createdTo).toLocaleDateString()
+        : 'any'
+      chips.push({
+        key: 'created',
+        label: `Created: ${from} - ${to}`,
+        value: {
+          createdFrom: filters.value.createdFrom,
+          createdTo: filters.value.createdTo
+        }
+      })
+    }
+
+    if (filters.value.completedFrom || filters.value.completedTo) {
+      const from = filters.value.completedFrom
+        ? new Date(filters.value.completedFrom).toLocaleDateString()
+        : 'any'
+      const to = filters.value.completedTo
+        ? new Date(filters.value.completedTo).toLocaleDateString()
+        : 'any'
+      chips.push({
+        key: 'completed',
+        label: `Completed: ${from} - ${to}`,
+        value: {
+          completedFrom: filters.value.completedFrom,
+          completedTo: filters.value.completedTo
+        }
+      })
+    }
+
+    return chips
   })
 
   const pendingTasks = computed(() =>
@@ -78,8 +201,14 @@ export const useTaskStore = defineStore('tasks', () => {
         ...params
       }
 
+      // Clean up empty arrays and falsy values
       Object.keys(queryParams).forEach((key) => {
-        if (!queryParams[key]) delete queryParams[key]
+        if (
+          !queryParams[key] ||
+          (Array.isArray(queryParams[key]) && queryParams[key].length === 0)
+        ) {
+          delete queryParams[key]
+        }
       })
 
       const response = await apiClient.getTasks(queryParams)
@@ -131,9 +260,6 @@ export const useTaskStore = defineStore('tasks', () => {
     try {
       const response = await apiClient.createTask(taskData)
 
-      tasks.value.unshift(response.data)
-      pagination.value.total++
-
       return response.data
     } catch (err) {
       error.value = err.message
@@ -159,11 +285,6 @@ export const useTaskStore = defineStore('tasks', () => {
     try {
       const response = await apiClient.updateTask(id, updates)
 
-      const index = tasks.value.findIndex((task) => task._id === id)
-      if (index !== -1) {
-        tasks.value[index] = response.data
-      }
-
       return response.data
     } catch (err) {
       error.value = err.message
@@ -187,12 +308,6 @@ export const useTaskStore = defineStore('tasks', () => {
 
     try {
       await apiClient.deleteTask(id)
-
-      const index = tasks.value.findIndex((task) => task._id === id)
-      if (index !== -1) {
-        tasks.value.splice(index, 1)
-        pagination.value.total--
-      }
     } catch (err) {
       error.value = err.message
       console.error('Error deleting task:', err)
@@ -210,6 +325,77 @@ export const useTaskStore = defineStore('tasks', () => {
   function updateFilters(newFilters) {
     filters.value = { ...filters.value, ...newFilters }
     pagination.value.page = 1
+    fetchTasks()
+  }
+
+  /**
+   * Applies a filter preset
+   * @function applyFilterPreset
+   * @param {Object} preset - Filter preset to apply
+   */
+  function applyFilterPreset(preset) {
+    updateFilters(preset.filters)
+  }
+
+  /**
+   * Clears all active filters
+   * @function clearAllFilters
+   */
+  function clearAllFilters() {
+    filters.value = {
+      status: [],
+      priority: [],
+      text: '',
+      createdFrom: null,
+      createdTo: null,
+      completedFrom: null,
+      completedTo: null,
+      sortBy: 'createdAt',
+      sortOrder: 'desc'
+    }
+    pagination.value.page = 1
+    fetchTasks()
+  }
+
+  /**
+   * Removes a specific filter
+   * @function removeFilter
+   * @param {string} filterKey - Key of the filter to remove
+   */
+  function removeFilter(filterKey) {
+    if (filterKey === 'created') {
+      filters.value.createdFrom = null
+      filters.value.createdTo = null
+    } else if (filterKey === 'completed') {
+      filters.value.completedFrom = null
+      filters.value.completedTo = null
+    } else if (filterKey === 'text') {
+      filters.value.text = ''
+    } else {
+      filters.value[filterKey] = Array.isArray(filters.value[filterKey])
+        ? []
+        : null
+    }
+    pagination.value.page = 1
+    fetchTasks()
+  }
+
+  /**
+   * Gets current filter state for URL serialization
+   * @function getFilterState
+   * @returns {Object} Current filter state
+   */
+  function getFilterState() {
+    return JSON.parse(JSON.stringify(filters.value))
+  }
+
+  /**
+   * Sets filter state from URL parameters
+   * @function setFilterState
+   * @param {Object} state - Filter state to set
+   */
+  function setFilterState(state) {
+    filters.value = { ...filters.value, ...state }
     fetchTasks()
   }
 
@@ -278,6 +464,9 @@ export const useTaskStore = defineStore('tasks', () => {
     error,
     pagination,
     filters,
+    filterPresets,
+    activeFilterCount,
+    activeFilterChips,
     pendingTasks,
     inProgressTasks,
     completedTasks,
@@ -290,6 +479,11 @@ export const useTaskStore = defineStore('tasks', () => {
     updateTask,
     deleteTask,
     updateFilters,
+    applyFilterPreset,
+    clearAllFilters,
+    removeFilter,
+    getFilterState,
+    setFilterState,
     setPage,
     handleTaskUpdate,
     initializeSocketListeners,

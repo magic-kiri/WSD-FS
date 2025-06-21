@@ -4,9 +4,13 @@
  */
 
 import express from 'express';
-import Task from '../models/Task.js';
+import Task, { TASK_STATUSES, TASK_PRIORITIES } from '../models/Task.js';
 import AnalyticsService from '../services/analyticsService.js';
+import exportsRouter, {
+  setSocketHandlers as setExportsSocketHandlers
+} from './exports.js';
 import { redisClient } from '../config/redis.js';
+import { buildQueryFromFilters } from '../utils/exportFormatters.js';
 
 const router = express.Router();
 
@@ -17,13 +21,116 @@ const router = express.Router();
 let socketHandlers = null;
 
 /**
+ * Valid sort fields based on Task schema
+ * @constant {Array<string>}
+ */
+const VALID_SORT_FIELDS = Object.keys(Task.schema.paths).filter((field) =>
+  // Include main fields that make sense for sorting
+  [
+    'title',
+    'status',
+    'priority',
+    'createdAt',
+    'updatedAt',
+    'completedAt',
+    'estimatedTime',
+    'actualTime'
+  ].includes(field)
+);
+
+/**
+ * Valid sort orders
+ * @constant {Array<string>}
+ */
+const VALID_SORT_ORDERS = ['asc', 'desc'];
+
+/**
  * Sets socket handlers for broadcasting real-time updates
  * @param {Object} handlers - Socket handler object with broadcast methods
  * @example
  * setSocketHandlers(socketHandlers);
  */
 export const setSocketHandlers = (handlers) => {
+  console.log('🔌 Setting socket handlers in API routes:', !!handlers);
   socketHandlers = handlers;
+  // Also set socket handlers for exports router
+  console.log('🔌 Setting socket handlers for exports router...');
+  setExportsSocketHandlers(handlers);
+};
+
+/**
+ * Validates a date string more strictly than JavaScript's Date constructor
+ * @param {string} dateString - Date string in YYYY-MM-DD format
+ * @returns {boolean} True if valid, false otherwise
+ */
+const isValidDate = (dateString) => {
+  // Check format first
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(dateString)) {
+    return false;
+  }
+
+  const date = new Date(dateString);
+
+  // Check if date is valid and matches the input
+  if (isNaN(date.getTime())) {
+    return false;
+  }
+
+  // Ensure the date components match the input (catches invalid dates like 2023-02-29)
+  const [year, month, day] = dateString.split('-').map(Number);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 && // Month is 0-indexed
+    date.getDate() === day
+  );
+};
+
+/**
+ * Validates enum values against allowed values
+ * @param {Array|string} values - Values to validate
+ * @param {Array} allowedValues - Array of allowed values
+ * @param {string} fieldName - Name of the field for error messages
+ * @returns {Object} Validation result with isValid and error properties
+ */
+const validateEnumValues = (values, allowedValues, fieldName) => {
+  const valueArray = Array.isArray(values) ? values : [values];
+  const invalidValues = valueArray.filter(
+    (value) => !allowedValues.includes(value)
+  );
+
+  if (invalidValues.length > 0) {
+    return {
+      isValid: false,
+      error: `Invalid ${fieldName} values: ${invalidValues.join(', ')}. Valid values: ${allowedValues.join(', ')}`
+    };
+  }
+
+  return { isValid: true };
+};
+
+/**
+ * Validates sort parameters
+ * @param {string} sortBy - Field to sort by
+ * @param {string} sortOrder - Sort order (asc/desc)
+ * @returns {Object} Validation result with isValid and error properties
+ */
+const validateSortParams = (sortBy, sortOrder) => {
+  if (!VALID_SORT_FIELDS.includes(sortBy)) {
+    return {
+      isValid: false,
+      error: `Invalid sortBy field: ${sortBy}. Valid fields: ${VALID_SORT_FIELDS.join(', ')}`
+    };
+  }
+
+  if (!VALID_SORT_ORDERS.includes(sortOrder)) {
+    return {
+      isValid: false,
+      error: `Invalid sortOrder: ${sortOrder}. Valid orders: ${VALID_SORT_ORDERS.join(', ')}`
+    };
+  }
+
+  return { isValid: true };
 };
 
 /**
@@ -33,8 +140,13 @@ export const setSocketHandlers = (handlers) => {
  * @param {Object} req.query - Query parameters
  * @param {number} [req.query.page=1] - Page number for pagination
  * @param {number} [req.query.limit=10] - Number of tasks per page
- * @param {string} [req.query.status] - Filter by task status
- * @param {string} [req.query.priority] - Filter by task priority
+ * @param {string} [req.query.text] - Text search in title and description
+ * @param {string|Array} [req.query.status] - Filter by task status (supports multi-select)
+ * @param {string|Array} [req.query.priority] - Filter by task priority (supports multi-select)
+ * @param {string} [req.query.createdFrom] - Filter by task creation date range start
+ * @param {string} [req.query.createdTo] - Filter by task creation date range end
+ * @param {string} [req.query.completedFrom] - Filter by task completion date range start
+ * @param {string} [req.query.completedTo] - Filter by task completion date range end
  * @param {string} [req.query.sortBy=createdAt] - Field to sort by
  * @param {string} [req.query.sortOrder=desc] - Sort order (asc/desc)
  * @returns {Object} Paginated tasks with metadata
@@ -44,15 +156,103 @@ router.get('/tasks', async (req, res, next) => {
     const {
       page = 1,
       limit = 10,
+      text,
       status,
       priority,
+      createdFrom,
+      createdTo,
+      completedFrom,
+      completedTo,
       sortBy = 'createdAt',
       sortOrder = 'desc'
     } = req.query;
 
-    const query = {};
-    if (status) query.status = status;
-    if (priority) query.priority = priority;
+    // Build query using the centralized function
+    const filters = {
+      text,
+      status,
+      priority,
+      createdFrom,
+      createdTo,
+      completedFrom,
+      completedTo
+    };
+
+    // Validate status values if provided
+    if (status) {
+      const validation = validateEnumValues(status, TASK_STATUSES, 'status');
+      if (!validation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: validation.error
+        });
+      }
+    }
+
+    // Validate priority values if provided
+    if (priority) {
+      const validation = validateEnumValues(
+        priority,
+        TASK_PRIORITIES,
+        'priority'
+      );
+      if (!validation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: validation.error
+        });
+      }
+    }
+
+    // Validate date formats
+    if (createdFrom && !isValidDate(createdFrom)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid createdFrom date format. Use YYYY-MM-DD'
+      });
+    }
+
+    if (createdTo && !isValidDate(createdTo)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid createdTo date format. Use YYYY-MM-DD'
+      });
+    }
+
+    if (completedFrom && !isValidDate(completedFrom)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid completedFrom date format. Use YYYY-MM-DD'
+      });
+    }
+
+    if (completedTo && !isValidDate(completedTo)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid completedTo date format. Use YYYY-MM-DD'
+      });
+    }
+
+    // Build the MongoDB query using the centralized function
+    const query = buildQueryFromFilters(filters);
+
+    // Handle completedAt exists condition for completed date filtering
+    if (completedFrom || completedTo) {
+      if (!query.completedAt) {
+        query.completedAt = {};
+      }
+      query.completedAt.$exists = true;
+      query.completedAt.$ne = null;
+    }
+
+    // Sort validation
+    const sortValidation = validateSortParams(sortBy, sortOrder);
+    if (!sortValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: sortValidation.error
+      });
+    }
 
     const sort = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
@@ -136,12 +336,13 @@ router.get('/tasks/:id', async (req, res, next) => {
  */
 router.post('/tasks', async (req, res, next) => {
   try {
-    const { title, description, priority, estimatedTime } = req.body;
+    const { title, description, priority, status, estimatedTime } = req.body;
 
     const task = new Task({
       title,
       description,
       priority,
+      status,
       estimatedTime
     });
 
@@ -277,5 +478,8 @@ router.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Mount exports router
+router.use('/exports', exportsRouter);
 
 export default router;
