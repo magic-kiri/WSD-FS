@@ -54,10 +54,20 @@ class ExportService {
    * @param {Date} exportCreationDate - When the export was created
    * @returns {Promise<boolean>} True if export is stale and needs refresh
    */
-  static async isExportStale(filters, exportCreationDate) {
+  static async isExportStale(filters, exportCreationDate, totalCount) {
     try {
       // Build query from filters to find relevant tasks
       const query = buildQueryFromFilters(filters);
+
+      // First, check if the current task count matches the original count
+      const currentCount = await Task.countDocuments(query);
+
+      if (currentCount !== totalCount) {
+        console.log(
+          `📊 Export is stale - task count changed from ${totalCount} to ${currentCount}`
+        );
+        return true;
+      }
 
       // Add condition to find tasks created or updated after export creation
       const staleQuery = {
@@ -120,7 +130,8 @@ class ExportService {
 
         const isStale = await this.isExportStale(
           filters,
-          existingExport.completedAt
+          existingExport.completedAt,
+          existingExport.taskCount
         );
         if (!isStale) {
           console.log('✅ Existing export is fresh - reusing and re-caching');
@@ -176,7 +187,8 @@ class ExportService {
         exportId,
         filters,
         format,
-        status: 'pending'
+        status: 'pending',
+        taskCount: totalCount
       });
       await exportHistory.save();
 
