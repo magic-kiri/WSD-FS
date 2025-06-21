@@ -33,7 +33,7 @@
         </div>
 
         <!-- Basic Filter Controls -->
-        <v-row align="center" class="pb-3">
+        <v-row align="center" class="pb-1">
           <!-- Search Text Field -->
           <v-col cols="12" md="4">
             <v-text-field
@@ -58,7 +58,7 @@
             </v-text-field>
           </v-col>
 
-          <v-col cols="12" md="2">
+          <v-col cols="12" md="4">
             <v-select
               v-model="localFilters.status"
               :items="statusOptions"
@@ -84,7 +84,7 @@
             </v-select>
           </v-col>
 
-          <v-col cols="12" md="2">
+          <v-col cols="12" md="4">
             <v-select
               v-model="localFilters.priority"
               :items="priorityOptions"
@@ -109,9 +109,11 @@
               </template>
             </v-select>
           </v-col>
+        </v-row>
 
-          <!-- Action Buttons -->
-          <v-col cols="12" md="4" class="d-flex align-center">
+        <!-- Action Buttons Row -->
+        <v-row align="center" class="pt-1 pb-2">
+          <v-col cols="12" class="d-flex align-center">
             <div class="d-flex ga-2">
               <v-btn
                 color="primary"
