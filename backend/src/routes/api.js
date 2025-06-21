@@ -10,6 +10,7 @@ import exportsRouter, {
   setSocketHandlers as setExportsSocketHandlers
 } from './exports.js';
 import { redisClient } from '../config/redis.js';
+import { buildQueryFromFilters } from '../utils/exportFormatters.js';
 
 const router = express.Router();
 
@@ -133,22 +134,13 @@ const validateSortParams = (sortBy, sortOrder) => {
 };
 
 /**
- * Creates MongoDB query for multi-select filtering
- * @param {Array|string} values - Values to filter by
- * @returns {Object|string} MongoDB query object or single value
- */
-const createMultiSelectQuery = (values) => {
-  const valueArray = Array.isArray(values) ? values : [values];
-  return valueArray.length === 1 ? valueArray[0] : { $in: valueArray };
-};
-
-/**
  * GET /tasks - Retrieve tasks with pagination, filtering, and sorting
  * @name GetTasks
  * @function
  * @param {Object} req.query - Query parameters
  * @param {number} [req.query.page=1] - Page number for pagination
  * @param {number} [req.query.limit=10] - Number of tasks per page
+ * @param {string} [req.query.text] - Text search in title and description
  * @param {string|Array} [req.query.status] - Filter by task status (supports multi-select)
  * @param {string|Array} [req.query.priority] - Filter by task priority (supports multi-select)
  * @param {string} [req.query.createdFrom] - Filter by task creation date range start
@@ -160,14 +152,11 @@ const createMultiSelectQuery = (values) => {
  * @returns {Object} Paginated tasks with metadata
  */
 router.get('/tasks', async (req, res, next) => {
-  // return res.json({
-  //   success: true,
-  //   data: []
-  // });
   try {
     const {
       page = 1,
       limit = 10,
+      text,
       status,
       priority,
       createdFrom,
@@ -178,9 +167,18 @@ router.get('/tasks', async (req, res, next) => {
       sortOrder = 'desc'
     } = req.query;
 
-    const query = {};
+    // Build query using the centralized function
+    const filters = {
+      text,
+      status,
+      priority,
+      createdFrom,
+      createdTo,
+      completedFrom,
+      completedTo
+    };
 
-    // Enhanced Status Filtering with reusable validation
+    // Validate status values if provided
     if (status) {
       const validation = validateEnumValues(status, TASK_STATUSES, 'status');
       if (!validation.isValid) {
@@ -189,10 +187,9 @@ router.get('/tasks', async (req, res, next) => {
           message: validation.error
         });
       }
-      query.status = createMultiSelectQuery(status);
     }
 
-    // Enhanced Priority Filtering with reusable validation
+    // Validate priority values if provided
     if (priority) {
       const validation = validateEnumValues(
         priority,
@@ -205,65 +202,47 @@ router.get('/tasks', async (req, res, next) => {
           message: validation.error
         });
       }
-      query.priority = createMultiSelectQuery(priority);
     }
 
-    // Created Date Range Filtering
-    if (createdFrom || createdTo) {
-      query.createdAt = {};
-
-      if (createdFrom) {
-        if (!isValidDate(createdFrom)) {
-          return res.status(400).json({
-            success: false,
-            message: 'Invalid createdFrom date format. Use YYYY-MM-DD'
-          });
-        }
-        const startDate = new Date(createdFrom);
-        startDate.setHours(0, 0, 0, 0);
-        query.createdAt.$gte = startDate;
-      }
-
-      if (createdTo) {
-        if (!isValidDate(createdTo)) {
-          return res.status(400).json({
-            success: false,
-            message: 'Invalid createdTo date format. Use YYYY-MM-DD'
-          });
-        }
-        const endDate = new Date(createdTo);
-        endDate.setHours(23, 59, 59, 999);
-        query.createdAt.$lte = endDate;
-      }
+    // Validate date formats
+    if (createdFrom && !isValidDate(createdFrom)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid createdFrom date format. Use YYYY-MM-DD'
+      });
     }
 
-    // Completed Date Range Filtering
+    if (createdTo && !isValidDate(createdTo)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid createdTo date format. Use YYYY-MM-DD'
+      });
+    }
+
+    if (completedFrom && !isValidDate(completedFrom)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid completedFrom date format. Use YYYY-MM-DD'
+      });
+    }
+
+    if (completedTo && !isValidDate(completedTo)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid completedTo date format. Use YYYY-MM-DD'
+      });
+    }
+
+    // Build the MongoDB query using the centralized function
+    const query = buildQueryFromFilters(filters);
+
+    // Handle completedAt exists condition for completed date filtering
     if (completedFrom || completedTo) {
-      query.completedAt = { $exists: true, $ne: null };
-
-      if (completedFrom) {
-        if (!isValidDate(completedFrom)) {
-          return res.status(400).json({
-            success: false,
-            message: 'Invalid completedFrom date format. Use YYYY-MM-DD'
-          });
-        }
-        const startDate = new Date(completedFrom);
-        startDate.setHours(0, 0, 0, 0);
-        query.completedAt.$gte = startDate;
+      if (!query.completedAt) {
+        query.completedAt = {};
       }
-
-      if (completedTo) {
-        if (!isValidDate(completedTo)) {
-          return res.status(400).json({
-            success: false,
-            message: 'Invalid completedTo date format. Use YYYY-MM-DD'
-          });
-        }
-        const endDate = new Date(completedTo);
-        endDate.setHours(23, 59, 59, 999);
-        query.completedAt.$lte = endDate;
-      }
+      query.completedAt.$exists = true;
+      query.completedAt.$ne = null;
     }
 
     // Sort validation

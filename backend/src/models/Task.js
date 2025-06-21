@@ -86,6 +86,10 @@ const taskSchema = new mongoose.Schema(
 taskSchema.index({ status: 1, priority: 1 });
 taskSchema.index({ createdAt: -1 });
 
+// Indexes for text search performance (regex-based searches)
+taskSchema.index({ title: 1 });
+taskSchema.index({ description: 1 });
+
 /**
  * Pre-save middleware to automatically set completedAt when status changes to completed
  * @param {Function} next - Mongoose next function

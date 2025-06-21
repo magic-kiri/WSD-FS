@@ -40,28 +40,37 @@ export function getDefaultFields() {
 export function buildQueryFromFilters(filters) {
   const query = {};
 
+  // Enhanced text search filtering for title and description
+  if (filters.text && filters.text.trim()) {
+    const searchText = filters.text.trim();
+
+    // Use simple regex search for compatibility
+    query.$or = [
+      { title: { $regex: new RegExp(searchText, 'i') } },
+      { description: { $regex: new RegExp(searchText, 'i') } }
+    ];
+  }
+
   // Status filtering
-  if (filters.status && filters.status.length > 0) {
-    query.status =
-      Array.isArray(filters.status) && filters.status.length === 1
-        ? filters.status[0]
-        : {
-          $in: Array.isArray(filters.status)
-            ? filters.status
-            : [filters.status]
-        };
+  if (filters.status) {
+    const statusArray = Array.isArray(filters.status)
+      ? filters.status
+      : [filters.status];
+    if (statusArray.length > 0) {
+      query.status =
+        statusArray.length === 1 ? statusArray[0] : { $in: statusArray };
+    }
   }
 
   // Priority filtering
-  if (filters.priority && filters.priority.length > 0) {
-    query.priority =
-      Array.isArray(filters.priority) && filters.priority.length === 1
-        ? filters.priority[0]
-        : {
-          $in: Array.isArray(filters.priority)
-            ? filters.priority
-            : [filters.priority]
-        };
+  if (filters.priority) {
+    const priorityArray = Array.isArray(filters.priority)
+      ? filters.priority
+      : [filters.priority];
+    if (priorityArray.length > 0) {
+      query.priority =
+        priorityArray.length === 1 ? priorityArray[0] : { $in: priorityArray };
+    }
   }
 
   // Date range filtering for createdAt
