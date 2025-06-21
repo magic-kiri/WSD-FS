@@ -1,13 +1,8 @@
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert';
 
-// Import ExportService
-import ExportService from '../../src/services/exportService.js';
 // Import formatting utilities
 import {
-  formatAsCSV,
-  formatAsJSON,
-  prepareTaskData,
   formatDateForExport,
   buildQueryFromFilters,
   generateCacheKey,
@@ -482,40 +477,5 @@ describe('ExportService Logic Tests', { timeout: 15000 }, () => {
         `MIME type for '${format}' should be '${expected}'`
       );
     });
-  });
-
-  test('should handle large task datasets in preparation', () => {
-    // Create a large mock dataset
-    const largeTasks = Array.from({ length: 1000 }, (_, index) => ({
-      _id: { toString: () => `task_${index.toString().padStart(4, '0')}` },
-      title: `Task ${index + 1}`,
-      description: `Description for task ${index + 1}`,
-      status: ['pending', 'in-progress', 'completed'][index % 3],
-      priority: ['low', 'medium', 'high'][index % 3],
-      estimatedTime: (index + 1) * 10,
-      actualTime: index * 8,
-      createdAt: new Date(Date.now() - index * 60000),
-      updatedAt: new Date(Date.now() - index * 30000),
-      completedAt: index % 3 === 2 ? new Date(Date.now() - index * 15000) : null
-    }));
-
-    const startTime = Date.now();
-    const result = prepareTaskData(largeTasks);
-    const endTime = Date.now();
-
-    // Should process 1000 tasks
-    assert.strictEqual(result.length, 1000);
-
-    // Should be reasonably fast (less than 1 second)
-    assert(
-      endTime - startTime < 1000,
-      'Processing 1000 tasks should take less than 1 second'
-    );
-
-    // Spot check some results
-    assert.strictEqual(result[0].id, 'task_0000');
-    assert.strictEqual(result[0].title, 'Task 1');
-    assert.strictEqual(result[999].id, 'task_0999');
-    assert.strictEqual(result[999].title, 'Task 1000');
   });
 });

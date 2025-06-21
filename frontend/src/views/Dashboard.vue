@@ -11,6 +11,7 @@
   <div>
     <h1 class="page-title">Dashboard</h1>
 
+    <!-- Main Metrics Row -->
     <v-row>
       <v-col cols="12" md="3">
         <metric-card
@@ -46,10 +47,50 @@
       </v-col>
     </v-row>
 
+    <!-- Export Metrics Row - Compact Design -->
+    <v-row class="mt-2" v-if="analyticsStore.analytics.exportMetrics.totalExports > 0">
+      <v-col cols="12" md="3">
+        <metric-card
+          title="Total Exports"
+          :value="analyticsStore.analytics.exportMetrics.totalExports"
+          icon="mdi-download-multiple"
+          color="secondary"
+        />
+      </v-col>
+      <v-col cols="12" md="3">
+        <metric-card
+          title="Export Success Rate"
+          :value="`${analyticsStore.analytics.exportMetrics.successRate}%`"
+          icon="mdi-check-circle-outline"
+          color="success"
+        />
+      </v-col>
+      <v-col cols="12" md="3">
+        <metric-card
+          title="Exports Today"
+          :value="analyticsStore.analytics.exportMetrics.todayExports"
+          icon="mdi-download"
+          color="info"
+        />
+      </v-col>
+      <v-col cols="12" md="3">
+        <metric-card
+          title="Failed Exports"
+          :value="analyticsStore.analytics.exportMetrics.failedExports"
+          icon="mdi-alert-circle"
+          color="error"
+        />
+      </v-col>
+    </v-row>
+
+    <!-- Analytics Charts Row -->
     <v-row class="mt-4">
-      <v-col cols="12" md="6">
+      <v-col cols="12" md="4">
         <v-card class="chart-container equal-height-chart">
-          <v-card-title>Tasks by Status</v-card-title>
+          <v-card-title class="d-flex align-center">
+            <v-icon class="mr-2" color="primary">mdi-chart-donut</v-icon>
+            Tasks by Status
+          </v-card-title>
           <v-card-text>
             <task-status-chart
               :data="analyticsStore.statusData"
@@ -58,29 +99,41 @@
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="12" md="6">
+      <v-col cols="12" md="4">
         <v-card class="chart-container equal-height-chart">
-          <v-card-title>Tasks by Priority</v-card-title>
+          <v-card-title class="d-flex align-center">
+            <v-icon class="mr-2" color="warning">mdi-flag-variant</v-icon>
+            Tasks by Priority
+          </v-card-title>
           <v-card-text>
             <task-priority-chart :data="analyticsStore.priorityData" />
           </v-card-text>
         </v-card>
       </v-col>
+      <!-- Export Status Chart - Only if exports exist -->
+      <v-col cols="12" md="4" v-if="analyticsStore.analytics.exportMetrics.totalExports > 0">
+        <v-card class="chart-container equal-height-chart">
+          <v-card-title class="d-flex align-center">
+            <v-icon class="mr-2" color="secondary">mdi-chart-pie</v-icon>
+            Export Status
+          </v-card-title>
+          <v-card-text>
+            <task-status-chart
+              :data="analyticsStore.exportStatusData"
+              :show-legend="true"
+            />
+          </v-card-text>
+        </v-card>
+      </v-col>
     </v-row>
 
+    <!-- Main Content Row -->
     <v-row class="mt-4">
       <v-col cols="12" md="8">
         <quick-task-list />
       </v-col>
       <v-col cols="12" md="4">
-        <v-row>
-          <v-col cols="12">
-            <recent-activity />
-          </v-col>
-          <v-col cols="12">
-            <export-history-panel />
-          </v-col>
-        </v-row>
+        <unified-activity />
       </v-col>
     </v-row>
   </div>
@@ -94,8 +147,7 @@ import MetricCard from '../components/MetricCard.vue'
 import TaskStatusChart from '../components/TaskStatusChart.vue'
 import TaskPriorityChart from '../components/TaskPriorityChart.vue'
 import QuickTaskList from '../components/QuickTaskList.vue'
-import RecentActivity from '../components/RecentActivity.vue'
-import ExportHistoryPanel from '../components/ExportHistoryPanel.vue'
+import UnifiedActivity from '../components/UnifiedActivity.vue'
 
 const analyticsStore = useAnalyticsStore()
 const taskStore = useTaskStore()
@@ -116,5 +168,20 @@ onMounted(() => {
   flex: 1;
   display: flex;
   align-items: center;
+}
+
+.chart-container {
+  transition: all 0.3s ease;
+}
+
+.chart-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.page-title {
+  font-weight: 300;
+  margin-bottom: 1.5rem;
+  color: rgba(0,0,0,0.87);
 }
 </style>

@@ -22,6 +22,32 @@ export const useExportStore = defineStore('exportStore', () => {
   // Computed
   const hasExports = computed(() => exports.value.length > 0)
   const recentExports = computed(() => exports.value.slice(0, 5))
+  const completedExports = computed(() =>
+    exports.value.filter((exp) => exp.status === 'completed')
+  )
+  const failedExports = computed(() =>
+    exports.value.filter((exp) => exp.status === 'failed')
+  )
+  const pendingExports = computed(() =>
+    exports.value.filter((exp) => exp.status === 'pending')
+  )
+  const processingExports = computed(() =>
+    exports.value.filter((exp) => exp.status === 'processing')
+  )
+
+  const exportStats = computed(() => ({
+    total: exports.value.length,
+    completed: completedExports.value.length,
+    failed: failedExports.value.length,
+    pending: pendingExports.value.length,
+    processing: processingExports.value.length,
+    successRate:
+      exports.value.length > 0
+        ? Math.round(
+            (completedExports.value.length / exports.value.length) * 100
+          )
+        : 0
+  }))
 
   // Actions
   const fetchExportHistory = async (params = {}) => {
@@ -191,6 +217,11 @@ export const useExportStore = defineStore('exportStore', () => {
     // Computed
     hasExports,
     recentExports,
+    completedExports,
+    failedExports,
+    pendingExports,
+    processingExports,
+    exportStats,
 
     // Actions
     fetchExportHistory,

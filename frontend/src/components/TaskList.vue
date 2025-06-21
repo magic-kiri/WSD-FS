@@ -14,10 +14,11 @@
     <div class="d-flex align-center mb-4">
       <h2 class="page-title">Tasks</h2>
       <v-spacer></v-spacer>
-      <v-btn color="primary" @click="showCreateDialog = true">
-        <v-icon left>mdi-plus</v-icon>
-        New Task
-      </v-btn>
+      <div class="d-flex ga-2">
+        <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
+          New Task
+        </v-btn>
+      </div>
     </div>
 
     <!-- Enhanced Filter Bar -->
@@ -122,6 +123,9 @@
       @save="handleSave"
     />
 
+    <!-- Export Modal -->
+    <export-modal v-model="showExportModal" />
+
     <v-dialog v-model="showDeleteDialog" max-width="400">
       <v-card>
         <v-card-title>Delete Task</v-card-title>
@@ -144,6 +148,7 @@ import { useTaskStore } from '../stores/taskStore.js'
 import { useFilterUrl } from '../composables/useFilterUrl.js'
 import TaskFormDialog from './TaskFormDialog.vue'
 import FilterBar from './FilterBar.vue'
+import ExportModal from './ExportModal.vue'
 
 const taskStore = useTaskStore()
 const { initializeFromUrl } = useFilterUrl()
@@ -151,6 +156,7 @@ const { initializeFromUrl } = useFilterUrl()
 const showCreateDialog = ref(false)
 const showEditDialog = ref(false)
 const showDeleteDialog = ref(false)
+const showExportModal = ref(false)
 const selectedTask = ref(null)
 
 const getStatusColor = (status) => {

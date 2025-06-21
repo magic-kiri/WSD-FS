@@ -41,6 +41,61 @@
           <v-icon>mdi-bell</v-icon>
         </v-btn>
       </v-badge>
+
+      <!-- User Menu -->
+      <v-menu offset-y>
+        <template #activator="{ props }">
+          <v-btn icon v-bind="props">
+            <v-avatar size="32">
+              <img src="https://randomuser.me/api/portraits/men/85.jpg" alt="User Avatar">
+            </v-avatar>
+          </v-btn>
+        </template>
+        <v-list>
+          <v-list-item>
+            <v-list-item-title class="font-weight-medium">User Menu</v-list-item-title>
+            <v-list-item-subtitle>Quick Actions</v-list-item-subtitle>
+          </v-list-item>
+          
+          <v-divider></v-divider>
+          
+          <v-list-item @click="navigateToExportHistory">
+            <template #prepend>
+              <v-icon>mdi-download-multiple</v-icon>
+            </template>
+            <v-list-item-title>Export History</v-list-item-title>
+            <v-list-item-subtitle>View and manage exports</v-list-item-subtitle>
+          </v-list-item>
+          
+          <v-list-item @click="navigateToTasks">
+            <template #prepend>
+              <v-icon>mdi-format-list-checks</v-icon>
+            </template>
+            <v-list-item-title>My Tasks</v-list-item-title>
+            <v-list-item-subtitle>Manage your tasks</v-list-item-subtitle>
+          </v-list-item>
+          
+          <v-list-item @click="navigateToAnalytics">
+            <template #prepend>
+              <v-icon>mdi-chart-line</v-icon>
+            </template>
+            <v-list-item-title>Analytics</v-list-item-title>
+            <v-list-item-subtitle>View detailed reports</v-list-item-subtitle>
+          </v-list-item>
+          
+          <v-divider></v-divider>
+          
+          <v-list-item @click="toggleTheme">
+            <template #prepend>
+              <v-icon>{{ themeIcon }}</v-icon>
+            </template>
+            <v-list-item-title>
+              {{ theme.global.name.value === 'dark' ? 'Light Mode' : 'Dark Mode' }}
+            </v-list-item-title>
+            <v-list-item-subtitle>Toggle appearance</v-list-item-subtitle>
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </v-app-bar>
 
     <v-main class="app-container">
@@ -77,14 +132,18 @@
 
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useTheme } from 'vuetify'
+import { useRouter } from 'vue-router'
 import { useAnalyticsStore } from './stores/analyticsStore.js'
 import { useTaskStore } from './stores/taskStore.js'
+import { useExportStore } from './stores/exportStore.js'
 import ConnectionStatus from './components/ConnectionStatus.vue'
 import NotificationDrawer from './components/NotificationDrawer.vue'
 
 const theme = useTheme()
+const router = useRouter()
 const analyticsStore = useAnalyticsStore()
 const taskStore = useTaskStore()
+const exportStore = useExportStore()
 
 const drawer = ref(false)
 const showNotifications = ref(false)
@@ -126,11 +185,26 @@ function removeNotification(id) {
   analyticsStore.removeNotification(id)
 }
 
+// Navigation methods for user menu
+function navigateToExportHistory() {
+  router.push('/export-history')
+}
+
+function navigateToTasks() {
+  router.push('/tasks')
+}
+
+function navigateToAnalytics() {
+  router.push('/analytics')
+}
+
 onMounted(() => {
   analyticsStore.initializeSocketListeners()
   taskStore.initializeSocketListeners()
   analyticsStore.connect()
   analyticsStore.fetchAnalytics()
+  // Initialize export store for dashboard metrics
+  exportStore.fetchExportHistory({ limit: 10 })
 })
 
 onUnmounted(() => {
