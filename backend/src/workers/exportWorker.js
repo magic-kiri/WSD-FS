@@ -142,7 +142,8 @@ class ExportWorker {
       this.broadcastCompleted(exportId, {
         taskCount: result.recordCount,
         fileSize: result.fileSize,
-        format
+        format,
+        filters
       });
 
       await job.updateProgress(100);

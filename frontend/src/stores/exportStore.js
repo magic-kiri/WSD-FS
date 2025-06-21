@@ -6,6 +6,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import apiClient from '../api/client.js'
+import socket from '../plugins/socket.js'
 
 export const useExportStore = defineStore('exportStore', () => {
   // State
@@ -207,6 +208,48 @@ export const useExportStore = defineStore('exportStore', () => {
     }
   }
 
+  /**
+   * Sets up Socket.IO event listeners for real-time export updates
+   * @function initializeSocketListeners
+   */
+  const initializeSocketListeners = () => {
+    socket.on('new-export-available', (data) => {
+      console.log('📥 New export available:', data.exportId)
+
+      // Add the new export to the beginning of the list if it's not already there
+      const existingExport = exports.value.find(
+        (exp) => exp.exportId === data.exportId
+      )
+      if (!existingExport && data.result) {
+        const newExport = {
+          exportId: data.exportId,
+          status: 'completed',
+          format: data.result.format,
+          taskCount: data.result.taskCount,
+          fileSize: data.result.fileSize,
+          createdAt: data.timestamp,
+          completedAt: data.timestamp,
+          filters: data.result.filters || {}
+        }
+        exports.value.unshift(newExport)
+
+        // Update pagination total
+        pagination.value.total += 1
+        pagination.value.totalPages = Math.ceil(
+          pagination.value.total / pagination.value.limit
+        )
+      }
+    })
+  }
+
+  /**
+   * Removes Socket.IO event listeners
+   * @function cleanupSocketListeners
+   */
+  const cleanupSocketListeners = () => {
+    socket.off('new-export-available')
+  }
+
   return {
     // State
     exports,
@@ -231,6 +274,10 @@ export const useExportStore = defineStore('exportStore', () => {
     repeatExport,
     setPage,
     setLimit,
-    resetStore
+    resetStore,
+
+    // Socket methods
+    initializeSocketListeners,
+    cleanupSocketListeners
   }
 })

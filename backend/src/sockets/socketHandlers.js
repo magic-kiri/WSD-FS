@@ -124,6 +124,13 @@ class SocketHandlers {
       timestamp: new Date().toISOString()
     });
 
+    // Broadcast to all clients that a new export is available
+    this.io.emit('new-export-available', {
+      exportId,
+      result,
+      timestamp: new Date().toISOString()
+    });
+
     // Also broadcast general notification
     this.broadcastNotification(
       `✅ Export completed: ${result.taskCount} tasks in ${result.format.toUpperCase()} format`,
