@@ -36,6 +36,9 @@ class SocketHandlers {
         if (exportId) {
           socket.join(`export-${exportId}`);
           console.log(`📥 Client ${socket.id} joined export room: ${exportId}`);
+
+          // Send confirmation that client has joined the room
+          socket.emit('export-room-joined', { exportId });
         }
       });
 
@@ -100,6 +103,7 @@ class SocketHandlers {
    * @param {string} message - Progress message
    */
   broadcastExportProgress(exportId, progress, message) {
+    console.log(`📊 Export ${exportId}: ${progress}% - ${message}`);
     this.io.to(`export-${exportId}`).emit('export-progress', {
       exportId,
       progress,

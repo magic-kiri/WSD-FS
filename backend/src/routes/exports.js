@@ -12,7 +12,7 @@ const router = express.Router();
  * Socket handlers reference for real-time updates
  * @type {Object|null}
  */
-let socketHandlers = null;
+export let socketHandlers = null;
 
 /**
  * Sets socket handlers for broadcasting real-time updates
@@ -21,6 +21,7 @@ let socketHandlers = null;
  * setSocketHandlers(socketHandlers);
  */
 export const setSocketHandlers = (handlers) => {
+  console.log('🔌 Setting socket handlers in exports router:', !!handlers);
   socketHandlers = handlers;
 };
 
@@ -36,7 +37,7 @@ export const setSocketHandlers = (handlers) => {
 router.post('/', async (req, res, next) => {
   try {
     const { filters = {}, format } = req.body;
-
+    console.dir(req.body, { depth: null });
     if (!format) {
       return res.status(400).json({
         success: false,
@@ -44,11 +45,7 @@ router.post('/', async (req, res, next) => {
       });
     }
 
-    const result = await ExportService.initiateExport(
-      filters,
-      format,
-      socketHandlers
-    );
+    const result = await ExportService.initiateExport(filters, format);
 
     res.status(201).json({
       success: true,
@@ -100,7 +97,6 @@ router.get('/:exportId/status', async (req, res, next) => {
 router.get('/:exportId/download', async (req, res, next) => {
   try {
     const { exportId } = req.params;
-
     const exportData = await ExportService.getExportData(exportId);
 
     res.setHeader('Content-Type', exportData.mimeType);
