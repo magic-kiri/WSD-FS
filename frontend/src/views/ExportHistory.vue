@@ -348,16 +348,16 @@ const getFilterSummary = (filters) => {
       if (['sortBy', 'sortOrder'].includes(key)) {
         return
       }
-      
+
       const formattedKey = formatFilterKey(key)
       let formattedValue
-      
+
       if (Array.isArray(value)) {
-        formattedValue = value.map(v => formatFilterValue(key, v)).join(', ')
+        formattedValue = value.map((v) => formatFilterValue(key, v)).join(', ')
       } else {
         formattedValue = formatFilterValue(key, value)
       }
-      
+
       summary[formattedKey] = formattedValue
     }
   })
@@ -367,23 +367,25 @@ const getFilterSummary = (filters) => {
 // Helper function to format camelCase keys to human-readable format
 const formatFilterKey = (key) => {
   const keyMappings = {
-    'status': 'Status',
-    'priority': 'Priority',
-    'text': 'Search Text',
-    'createdFrom': 'Created From',
-    'createdTo': 'Created To',
-    'completedFrom': 'Completed From',
-    'completedTo': 'Completed To',
-    'sortBy': 'Sort By',
-    'sortOrder': 'Sort Order'
+    status: 'Status',
+    priority: 'Priority',
+    text: 'Search Text',
+    createdFrom: 'Created From',
+    createdTo: 'Created To',
+    completedFrom: 'Completed From',
+    completedTo: 'Completed To',
+    sortBy: 'Sort By',
+    sortOrder: 'Sort Order'
   }
-  
+
   if (keyMappings[key]) {
     return keyMappings[key]
   }
-  
+
   // Fallback: convert camelCase to Title Case
-  return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
 }
 
 // Helper function to format filter values
@@ -396,41 +398,43 @@ const formatFilterValue = (key, value) => {
       day: 'numeric'
     })
   }
-  
+
   // Handle status values
   if (key === 'status') {
     const statusMappings = {
       'in-progress': 'In Progress',
-      'completed': 'Completed',
-      'pending': 'Pending',
-      'failed': 'Failed'
+      completed: 'Completed',
+      pending: 'Pending',
+      failed: 'Failed'
     }
-    return statusMappings[value] || value.charAt(0).toUpperCase() + value.slice(1)
+    return (
+      statusMappings[value] || value.charAt(0).toUpperCase() + value.slice(1)
+    )
   }
-  
+
   // Handle priority values
   if (key === 'priority') {
     return value.charAt(0).toUpperCase() + value.slice(1)
   }
-  
+
   // Handle sortBy values
   if (key === 'sortBy') {
     const sortMappings = {
-      'createdAt': 'Created At',
-      'updatedAt': 'Updated At',
-      'completedAt': 'Completed At',
-      'title': 'Title',
-      'priority': 'Priority',
-      'status': 'Status'
+      createdAt: 'Created At',
+      updatedAt: 'Updated At',
+      completedAt: 'Completed At',
+      title: 'Title',
+      priority: 'Priority',
+      status: 'Status'
     }
     return sortMappings[value] || value
   }
-  
+
   // Handle sortOrder values
   if (key === 'sortOrder') {
     return value === 'desc' ? 'Descending' : 'Ascending'
   }
-  
+
   // Default: return as is
   return value
 }
