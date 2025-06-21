@@ -33,8 +33,32 @@
         </div>
 
         <!-- Basic Filter Controls -->
-        <v-row>
+        <v-row align="center" class="pb-3">
+          <!-- Search Text Field -->
           <v-col cols="12" md="4">
+            <v-text-field
+              v-model="localFilters.text"
+              label="Search tasks..."
+              placeholder="Search in title and description"
+              prepend-inner-icon="mdi-magnify"
+              variant="outlined"
+              density="comfortable"
+              clearable
+              hide-details
+              @update:model-value="updateFilters({ text: $event })"
+            >
+              <template #append-inner>
+                <v-icon
+                  v-if="localFilters.text"
+                  @click="updateFilters({ text: '' })"
+                >
+                  mdi-close
+                </v-icon>
+              </template>
+            </v-text-field>
+          </v-col>
+
+          <v-col cols="12" md="2">
             <v-select
               v-model="localFilters.status"
               :items="statusOptions"
@@ -43,7 +67,8 @@
               chips
               clearable
               variant="outlined"
-              density="compact"
+              density="comfortable"
+              hide-details
               @update:model-value="updateFilters({ status: $event })"
             >
               <template #chip="{ props, item }">
@@ -59,7 +84,7 @@
             </v-select>
           </v-col>
 
-          <v-col cols="12" md="4">
+          <v-col cols="12" md="2">
             <v-select
               v-model="localFilters.priority"
               :items="priorityOptions"
@@ -68,7 +93,8 @@
               chips
               clearable
               variant="outlined"
-              density="compact"
+              density="comfortable"
+              hide-details
               @update:model-value="updateFilters({ priority: $event })"
             >
               <template #chip="{ props, item }">
@@ -84,11 +110,13 @@
             </v-select>
           </v-col>
 
-          <v-col cols="12" md="4">
-            <div class="d-flex gap-2">
+          <!-- Action Buttons -->
+          <v-col cols="12" md="4" class="d-flex align-center">
+            <div class="d-flex ga-2">
               <v-btn
                 color="primary"
                 variant="outlined"
+                size="default"
                 @click="showAdvanced = !showAdvanced"
               >
                 <v-icon left>
@@ -99,7 +127,7 @@
 
               <v-menu offset-y>
                 <template #activator="{ props }">
-                  <v-btn variant="outlined" v-bind="props">
+                  <v-btn variant="outlined" size="default" v-bind="props">
                     <v-icon left>mdi-bookmark-multiple</v-icon>
                     Presets
                   </v-btn>
@@ -118,6 +146,7 @@
               <v-btn
                 color="success"
                 variant="outlined"
+                size="default"
                 :disabled="taskStore.pagination.total === 0"
                 @click="showExportModal = true"
               >
@@ -127,115 +156,115 @@
             </div>
           </v-col>
         </v-row>
-      </v-card-text>
 
-      <!-- Advanced Filters Section -->
-      <v-expand-transition>
-        <div v-show="showAdvanced">
-          <v-divider></v-divider>
-          <v-card-text>
-            <v-row>
-              <!-- Date Range Filters -->
-              <v-col cols="12" md="6">
-                <h4 class="text-subtitle-1 mb-3">Created Date Range</h4>
-                <v-row>
-                  <v-col cols="6">
-                    <v-text-field
-                      v-model="localFilters.createdFrom"
-                      label="From"
-                      type="date"
-                      variant="outlined"
-                      density="compact"
-                      @update:model-value="
-                        updateFilters({ createdFrom: $event })
-                      "
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="6">
-                    <v-text-field
-                      v-model="localFilters.createdTo"
-                      label="To"
-                      type="date"
-                      variant="outlined"
-                      density="compact"
-                      @update:model-value="updateFilters({ createdTo: $event })"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-              </v-col>
+        <!-- Advanced Filters Section -->
+        <v-expand-transition>
+          <div v-show="showAdvanced">
+            <v-divider></v-divider>
+            <v-card-text>
+              <v-row>
+                <!-- Date Range Filters -->
+                <v-col cols="12" md="6">
+                  <h4 class="text-subtitle-1 mb-3">Created Date Range</h4>
+                  <v-row>
+                    <v-col cols="6">
+                      <v-text-field
+                        v-model="localFilters.createdFrom"
+                        label="From"
+                        type="date"
+                        variant="outlined"
+                        density="compact"
+                        @update:model-value="
+                          updateFilters({ createdFrom: $event })
+                        "
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        v-model="localFilters.createdTo"
+                        label="To"
+                        type="date"
+                        variant="outlined"
+                        density="compact"
+                        @update:model-value="updateFilters({ createdTo: $event })"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </v-col>
 
-              <v-col cols="12" md="6">
-                <h4 class="text-subtitle-1 mb-3">Completed Date Range</h4>
-                <v-row>
-                  <v-col cols="6">
-                    <v-text-field
-                      v-model="localFilters.completedFrom"
-                      label="From"
-                      type="date"
-                      variant="outlined"
-                      density="compact"
-                      @update:model-value="
-                        updateFilters({ completedFrom: $event })
-                      "
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="6">
-                    <v-text-field
-                      v-model="localFilters.completedTo"
-                      label="To"
-                      type="date"
-                      variant="outlined"
-                      density="compact"
-                      @update:model-value="
-                        updateFilters({ completedTo: $event })
-                      "
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-              </v-col>
+                <v-col cols="12" md="6">
+                  <h4 class="text-subtitle-1 mb-3">Completed Date Range</h4>
+                  <v-row>
+                    <v-col cols="6">
+                      <v-text-field
+                        v-model="localFilters.completedFrom"
+                        label="From"
+                        type="date"
+                        variant="outlined"
+                        density="compact"
+                        @update:model-value="
+                          updateFilters({ completedFrom: $event })
+                        "
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        v-model="localFilters.completedTo"
+                        label="To"
+                        type="date"
+                        variant="outlined"
+                        density="compact"
+                        @update:model-value="
+                          updateFilters({ completedTo: $event })
+                        "
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </v-col>
 
-              <!-- Sorting Options -->
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="localFilters.sortBy"
-                  :items="sortOptions"
-                  label="Sort by"
-                  variant="outlined"
-                  density="compact"
-                  @update:model-value="updateFilters({ sortBy: $event })"
-                ></v-select>
-              </v-col>
+                <!-- Sorting Options -->
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="localFilters.sortBy"
+                    :items="sortOptions"
+                    label="Sort by"
+                    variant="outlined"
+                    density="compact"
+                    @update:model-value="updateFilters({ sortBy: $event })"
+                  ></v-select>
+                </v-col>
 
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="localFilters.sortOrder"
-                  :items="orderOptions"
-                  label="Order"
-                  variant="outlined"
-                  density="compact"
-                  @update:model-value="updateFilters({ sortOrder: $event })"
-                ></v-select>
-              </v-col>
-            </v-row>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="localFilters.sortOrder"
+                    :items="orderOptions"
+                    label="Order"
+                    variant="outlined"
+                    density="compact"
+                    @update:model-value="updateFilters({ sortOrder: $event })"
+                  ></v-select>
+                </v-col>
+              </v-row>
 
-            <!-- Date Presets -->
-            <div class="mt-4">
-              <h4 class="text-subtitle-1 mb-2">Quick Date Ranges</h4>
-              <div class="d-flex flex-wrap gap-2">
-                <v-btn
-                  v-for="preset in datePresets"
-                  :key="preset.name"
-                  size="small"
-                  variant="outlined"
-                  @click="applyDatePreset(preset)"
-                >
-                  {{ preset.name }}
-                </v-btn>
+              <!-- Date Presets -->
+              <div class="mt-4">
+                <h4 class="text-subtitle-1 mb-2">Quick Date Ranges</h4>
+                <div class="d-flex flex-wrap gap-2">
+                  <v-btn
+                    v-for="preset in datePresets"
+                    :key="preset.name"
+                    size="small"
+                    variant="outlined"
+                    @click="applyDatePreset(preset)"
+                  >
+                    {{ preset.name }}
+                  </v-btn>
+                </div>
               </div>
-            </div>
-          </v-card-text>
-        </div>
-      </v-expand-transition>
+            </v-card-text>
+          </div>
+        </v-expand-transition>
+      </v-card-text>
     </v-card>
 
     <!-- Active Filter Chips -->
@@ -298,6 +327,7 @@ const showExportModal = ref(false)
 const localFilters = reactive({
   status: [],
   priority: [],
+  text: '',
   createdFrom: null,
   createdTo: null,
   completedFrom: null,

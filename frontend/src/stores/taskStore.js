@@ -27,6 +27,7 @@ export const useTaskStore = defineStore('tasks', () => {
   const filters = ref({
     status: [],
     priority: [],
+    text: '',
     createdFrom: null,
     createdTo: null,
     completedFrom: null,
@@ -80,6 +81,7 @@ export const useTaskStore = defineStore('tasks', () => {
     let count = 0
     if (filters.value.status?.length > 0) count++
     if (filters.value.priority?.length > 0) count++
+    if (filters.value.text?.trim()) count++
     if (filters.value.createdFrom) count++
     if (filters.value.createdTo) count++
     if (filters.value.completedFrom) count++
@@ -104,6 +106,14 @@ export const useTaskStore = defineStore('tasks', () => {
         key: 'priority',
         label: `Priority: ${filters.value.priority.join(', ')}`,
         value: filters.value.priority
+      })
+    }
+
+    if (filters.value.text?.trim()) {
+      chips.push({
+        key: 'text',
+        label: `Search: "${filters.value.text}"`,
+        value: filters.value.text
       })
     }
 
@@ -349,6 +359,7 @@ export const useTaskStore = defineStore('tasks', () => {
     filters.value = {
       status: [],
       priority: [],
+      text: '',
       createdFrom: null,
       createdTo: null,
       completedFrom: null,
@@ -372,6 +383,8 @@ export const useTaskStore = defineStore('tasks', () => {
     } else if (filterKey === 'completed') {
       filters.value.completedFrom = null
       filters.value.completedTo = null
+    } else if (filterKey === 'text') {
+      filters.value.text = ''
     } else {
       filters.value[filterKey] = Array.isArray(filters.value[filterKey])
         ? []
