@@ -118,6 +118,13 @@
           </div>
         </template>
 
+        <!-- Tasks Column -->
+        <template #[`item.taskCount`]="{ item }">
+          <div class="text-body-2">
+            {{ item.taskCount }}
+          </div>
+        </template>
+
         <!-- Filters Applied Column -->
         <template #[`item.filters`]="{ item }">
           <div v-if="item.filters && Object.keys(item.filters).length > 0">
@@ -234,6 +241,7 @@ const tableHeaders = [
   { title: 'Format', key: 'format', width: '80px' },
   { title: 'Created', key: 'createdAt', width: '150px' },
   { title: 'Size', key: 'fileSize', width: '80px' },
+  { title: 'Tasks', key: 'taskCount', width: '80px' },
   { title: 'Filters', key: 'filters', width: '200px' },
   { title: 'Actions', key: 'actions', width: '120px', sortable: false }
 ]
