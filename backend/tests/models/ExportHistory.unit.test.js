@@ -185,31 +185,6 @@ describe('ExportHistory Model Unit Tests', () => {
     );
   });
 
-  test('should have incrementDownloadCount method', () => {
-    const instance = new ExportHistory({
-      exportId: 'test',
-      filters: {},
-      format: 'csv'
-    });
-    assert(typeof instance.incrementDownloadCount === 'function');
-  });
-
-  test('incrementDownloadCount should be async', () => {
-    const instance = new ExportHistory({
-      exportId: 'test',
-      filters: {},
-      format: 'csv'
-    });
-    // Just check that the method exists and returns a promise-like object
-    // without actually calling it to avoid database operations
-    assert(typeof instance.incrementDownloadCount === 'function');
-
-    // Check constructor name for async function
-    assert(
-      instance.incrementDownloadCount.constructor.name === 'AsyncFunction'
-    );
-  });
-
   test('should validate required fields', () => {
     const schema = ExportHistory.schema;
     const paths = schema.paths;

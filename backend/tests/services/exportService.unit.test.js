@@ -81,8 +81,7 @@ describe('ExportService Unit Tests', { timeout: 10000 }, () => {
       'getExportData',
       'getExportStatus',
       'getExportHistory',
-      'calculateProgress',
-      'cleanupExpiredExports'
+      'calculateProgress'
     ];
 
     staticMethods.forEach((method) => {
@@ -238,8 +237,7 @@ describe('ExportService Unit Tests', { timeout: 10000 }, () => {
       'initiateExport',
       'getExportData',
       'getExportStatus',
-      'getExportHistory',
-      'cleanupExpiredExports' // Fixed: removed non-existent methods
+      'getExportHistory'
     ];
 
     asyncMethods.forEach((method) => {

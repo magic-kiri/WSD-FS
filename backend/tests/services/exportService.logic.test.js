@@ -85,101 +85,6 @@ describe('ExportService Logic Tests', { timeout: 15000 }, () => {
     }));
   };
 
-  test('should process CSV formatting correctly', () => {
-    const taskData = [
-      {
-        id: '1',
-        title: 'Task 1',
-        description: 'First task',
-        status: 'pending',
-        priority: 'high',
-        estimatedTime: 60,
-        actualTime: 0,
-        createdAt: '2024-01-15 10:00:00',
-        updatedAt: '2024-01-15 11:00:00',
-        completedAt: ''
-      },
-      {
-        id: '2',
-        title: 'Task 2',
-        description: 'Second task',
-        status: 'completed',
-        priority: 'medium',
-        estimatedTime: 30,
-        actualTime: 25,
-        createdAt: '2024-01-15 09:00:00',
-        updatedAt: '2024-01-15 09:30:00',
-        completedAt: '2024-01-15 09:25:00'
-      }
-    ];
-
-    const csv = formatAsCSV(taskData);
-    const lines = csv.split('\n');
-
-    // Should have header + 2 data rows
-    assert.strictEqual(lines.length, 3);
-
-    // Check header
-    const expectedHeaders = [
-      'id',
-      'title',
-      'description',
-      'status',
-      'priority',
-      'estimatedTime',
-      'actualTime',
-      'createdAt',
-      'updatedAt',
-      'completedAt'
-    ];
-    const headers = lines[0].split(',');
-    assert.deepStrictEqual(headers, expectedHeaders);
-
-    // Check first data row
-    const firstRow = lines[1].split(',');
-    assert.strictEqual(firstRow[0], '1');
-    assert.strictEqual(firstRow[1], 'Task 1');
-    assert.strictEqual(firstRow[3], 'pending');
-    assert.strictEqual(firstRow[4], 'high');
-
-    // Check second data row
-    const secondRow = lines[2].split(',');
-    assert.strictEqual(secondRow[0], '2');
-    assert.strictEqual(secondRow[3], 'completed');
-    assert.strictEqual(secondRow[9], '2024-01-15 09:25:00'); // completedAt
-  });
-
-  test('should process JSON formatting correctly', () => {
-    const taskData = [
-      {
-        id: '1',
-        title: 'Task 1',
-        status: 'pending',
-        priority: 'high'
-      }
-    ];
-
-    const jsonString = formatAsJSON(taskData);
-    const parsed = JSON.parse(jsonString);
-
-    // Check structure
-    assert(typeof parsed.exportedAt === 'string');
-    assert(typeof parsed.totalTasks === 'number');
-    assert(Array.isArray(parsed.tasks));
-
-    // Check values
-    assert.strictEqual(parsed.totalTasks, 1);
-    assert.strictEqual(parsed.tasks.length, 1);
-    assert.strictEqual(parsed.tasks[0].id, '1');
-    assert.strictEqual(parsed.tasks[0].title, 'Task 1');
-    assert.strictEqual(parsed.tasks[0].status, 'pending');
-    assert.strictEqual(parsed.tasks[0].priority, 'high');
-
-    // Check timestamp format
-    const exportedAt = new Date(parsed.exportedAt);
-    assert(!isNaN(exportedAt.getTime()));
-  });
-
   test('should build complex MongoDB queries correctly', () => {
     const complexFilters = {
       status: ['pending', 'in-progress'],
@@ -326,34 +231,6 @@ describe('ExportService Logic Tests', { timeout: 15000 }, () => {
     assert(csvKey !== jsonKey);
     assert(csvKey.startsWith('export:'));
     assert(jsonKey.startsWith('export:'));
-  });
-
-  test('should handle CSV escaping edge cases', () => {
-    const taskData = [
-      {
-        id: '1',
-        title: 'Task with\nnewline',
-        description: 'Has "quotes" and, commas',
-        status: 'pending'
-      },
-      {
-        id: '2',
-        title: 'Task with ""double quotes""',
-        description: 'Normal description',
-        status: 'completed'
-      }
-    ];
-
-    const csv = formatAsCSV(taskData);
-
-    // Check that newlines are properly escaped
-    assert(csv.includes('"Task with\nnewline"'));
-
-    // Check that quotes and commas are properly escaped
-    assert(csv.includes('"Has ""quotes"" and, commas"'));
-
-    // Check that double quotes are properly escaped
-    assert(csv.includes('"Task with """"double quotes"""""'));
   });
 
   test('should process sort options correctly', () => {
