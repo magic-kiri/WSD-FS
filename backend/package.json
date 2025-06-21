@@ -13,7 +13,8 @@
     "lint:fix": "eslint src/ --fix",
     "seed": "node scripts/seed-tasks.js",
     "seed:small": "node scripts/seed-tasks.js 25",
-    "seed:large": "node scripts/seed-tasks.js 100"
+    "seed:large": "node scripts/seed-tasks.js 100",
+    "seed:huge": "node scripts/seed-tasks.js 5000"
   },
   "keywords": [
     "task",

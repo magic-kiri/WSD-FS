@@ -20,6 +20,7 @@ vi.mock('vue-router', () => ({
 // Mock the task store
 const mockTaskStore = {
   filters: {
+    text: '',
     status: [],
     priority: [],
     createdFrom: null,
@@ -53,6 +54,7 @@ describe('useFilterUrl Composable', () => {
 
     // Reset filters
     Object.assign(mockTaskStore.filters, {
+      text: '',
       status: [],
       priority: [],
       createdFrom: null,
@@ -187,6 +189,7 @@ describe('useFilterUrl Composable', () => {
       const result = deserializeFilters(query)
 
       expect(result).toEqual({
+        text: '',
         status: ['pending', 'completed'],
         priority: ['high', 'medium'],
         createdFrom: null,
@@ -237,6 +240,7 @@ describe('useFilterUrl Composable', () => {
       const result = deserializeFilters(query)
 
       expect(result).toEqual({
+        text: '',
         status: [],
         priority: [],
         createdFrom: null,
@@ -352,6 +356,7 @@ describe('useFilterUrl Composable', () => {
       initializeFromUrl()
 
       expect(mockTaskStore.setFilterState).toHaveBeenCalledWith({
+        text: '',
         status: ['pending', 'completed'],
         priority: ['high'],
         createdFrom: '2024-01-01',
@@ -480,6 +485,7 @@ describe('useFilterUrl Composable', () => {
       const { serializeFilters, deserializeFilters } = useFilterUrl()
 
       const originalFilters = {
+        text: '',
         status: ['pending', 'in-progress'],
         priority: ['high', 'medium'],
         createdFrom: '2024-01-01',
@@ -500,6 +506,7 @@ describe('useFilterUrl Composable', () => {
       const { serializeFilters, deserializeFilters } = useFilterUrl()
 
       const originalFilters = {
+        text: '',
         status: [],
         priority: ['low'],
         createdFrom: null,
