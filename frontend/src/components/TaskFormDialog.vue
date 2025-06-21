@@ -185,7 +185,7 @@ function cancel() {
 async function save() {
   // Prevent multiple simultaneous saves
   if (loading.value) return
-  
+
   if (!form.value?.validate()) return
 
   loading.value = true

@@ -336,12 +336,13 @@ router.get('/tasks/:id', async (req, res, next) => {
  */
 router.post('/tasks', async (req, res, next) => {
   try {
-    const { title, description, priority, estimatedTime } = req.body;
+    const { title, description, priority, status, estimatedTime } = req.body;
 
     const task = new Task({
       title,
       description,
       priority,
+      status,
       estimatedTime
     });
 

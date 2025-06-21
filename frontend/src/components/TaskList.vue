@@ -212,13 +212,13 @@ const formatDate = (date) => {
       return 'Invalid date'
     }
 
-    console.log('🔍 date', date)
+    
     const formatted = dateObj.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     })
-    console.log('🔍 formatted date', formatted)
+    
     return formatted
   } catch (error) {
     console.error('🔍 Error formatting date:', error, 'Original date:', date)
