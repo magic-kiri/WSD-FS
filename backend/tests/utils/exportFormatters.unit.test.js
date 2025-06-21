@@ -126,13 +126,13 @@ describe('Export Formatters Unit Tests', { timeout: 10000 }, () => {
       assert(query.$or, 'Should have $or query');
       assert.strictEqual(
         query.$or[0].title.$regex.source,
-        'test (urgent)',
-        'Should handle special characters in title'
+        'test \\(urgent\\)',
+        'Should escape special characters in title for security'
       );
       assert.strictEqual(
         query.$or[1].description.$regex.source,
-        'test (urgent)',
-        'Should handle special characters in description'
+        'test \\(urgent\\)',
+        'Should escape special characters in description for security'
       );
     });
 

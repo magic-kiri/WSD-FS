@@ -33,6 +33,33 @@ export function getDefaultFields() {
 }
 
 /**
+ * Sanitize text input for safe regex usage
+ * @param {string} text - User input text
+ * @returns {string} Sanitized text with escaped regex special characters
+ */
+export function sanitizeTextSearch(text) {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+
+  // Trim whitespace and limit length to prevent abuse
+  const trimmed = text.trim();
+  if (trimmed.length === 0) {
+    return '';
+  }
+
+  // Limit search text length to reasonable bounds
+  const maxLength = 200;
+  const limited =
+    trimmed.length > maxLength ? trimmed.substring(0, maxLength) : trimmed;
+
+  // Escape special regex characters to prevent regex injection
+  const escaped = limited.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  return escaped;
+}
+
+/**
  * Build MongoDB query from filters
  * @param {Object} filters - Filter parameters
  * @returns {Object} MongoDB query object
@@ -40,15 +67,17 @@ export function getDefaultFields() {
 export function buildQueryFromFilters(filters) {
   const query = {};
 
-  // Enhanced text search filtering for title and description
+  // Enhanced text search filtering for title and description with sanitization
   if (filters.text && filters.text.trim()) {
-    const searchText = filters.text.trim();
+    const sanitizedText = sanitizeTextSearch(filters.text);
 
-    // Use simple regex search for compatibility
-    query.$or = [
-      { title: { $regex: new RegExp(searchText, 'i') } },
-      { description: { $regex: new RegExp(searchText, 'i') } }
-    ];
+    if (sanitizedText) {
+      // Use sanitized text for safe regex search
+      query.$or = [
+        { title: { $regex: new RegExp(sanitizedText, 'i') } },
+        { description: { $regex: new RegExp(sanitizedText, 'i') } }
+      ];
+    }
   }
 
   // Status filtering
