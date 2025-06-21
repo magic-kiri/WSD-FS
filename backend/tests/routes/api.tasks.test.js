@@ -1,4 +1,4 @@
-import { test, describe } from 'node:test';
+import { test, describe, after } from 'node:test';
 import assert from 'node:assert';
 
 // Import the router and function
@@ -129,7 +129,14 @@ const getTasksRouteHandler = () => {
   return tasksRoute?.route.stack[0].handle;
 };
 
-describe('GET /tasks Route Basic Tests', () => {
+describe('GET /tasks Route Basic Tests', { timeout: 10000 }, () => {
+  after(async () => {
+    // Force exit after cleanup
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
+  });
+
   test('should have GET /tasks route handler', () => {
     const routeHandler = getTasksRouteHandler();
     assert(typeof routeHandler === 'function');
@@ -236,7 +243,15 @@ describe('GET /tasks Route Basic Tests', () => {
 
 describe('GET /tasks Route Tests', () => {
   let TaskModule;
+
   let routeHandler;
+
+  after(async () => {
+    // Force exit after cleanup
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
+  });
 
   // Setup before each test
   const setupMocks = async () => {

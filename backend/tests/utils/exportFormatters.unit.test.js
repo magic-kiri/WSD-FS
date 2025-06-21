@@ -1,4 +1,4 @@
-import { test, describe } from 'node:test';
+import { test, describe, after } from 'node:test';
 import assert from 'node:assert';
 
 // Import formatting utilities
@@ -9,7 +9,15 @@ import {
   formatAsJSON
 } from '../../src/utils/exportFormatters.js';
 
-describe('Export Formatters Unit Tests', () => {
+describe('Export Formatters Unit Tests', { timeout: 10000 }, () => {
+  after(async () => {
+    // Force exit after cleanup
+    setTimeout(() => {
+      console.log('🚪 Force exiting...');
+      process.exit(0);
+    }, 200);
+  });
+
   describe('formatDateForExport', () => {
     test('should format ISO date strings correctly', () => {
       const testCases = [

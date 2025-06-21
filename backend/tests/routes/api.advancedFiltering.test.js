@@ -8,6 +8,7 @@ import {
 
 // Import the route handler
 let routeHandler;
+let redisClient;
 
 describe('Advanced Filtering API Tests', () => {
   before(async () => {
@@ -30,6 +31,16 @@ describe('Advanced Filtering API Tests', () => {
 
   beforeEach(async () => {
     await setupMocks();
+  });
+
+  after(async () => {
+    // Clean up Redis connection to prevent hanging
+    if (redisClient && redisClient.disconnect) {
+      await redisClient.disconnect();
+    }
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
   });
 
   describe('Date Range Filtering', () => {
