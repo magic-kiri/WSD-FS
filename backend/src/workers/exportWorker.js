@@ -21,7 +21,7 @@ import {
 /**
  * Chunk size for processing (records per batch)
  */
-const CHUNK_SIZE = 2;
+const CHUNK_SIZE = process.env.EXPORT_WORKER_CHUNK_SIZE || 1000;
 
 /**
  * Export worker class
@@ -268,14 +268,9 @@ class ExportWorker {
     let currentChunk = [];
 
     for await (const task of cursor) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
       const formattedTask = formatTaskForExport(task);
       currentChunk.push(taskToCsvRow(formattedTask));
       processedCount++;
-
-      if (processedCount > 10 && !isRepeat) {
-        throw new Error('Test: Handling large export');
-      }
 
       // Write chunk when it reaches limit
       if (currentChunk.length >= CHUNK_SIZE) {
@@ -303,6 +298,11 @@ class ExportWorker {
     if (currentChunk.length > 0) {
       writeStream.write(currentChunk.join('\n') + '\n');
     }
+
+    // TODO: The file should be moved to proper storage like S3 or Azure Blob Storage
+    // ..........................................................................
+    // TODO: The file should be deleted after it is moved to the proper storage
+    // ..........................................................................
 
     // Close stream and wait for finish
     writeStream.end();
@@ -344,7 +344,6 @@ class ExportWorker {
     let currentChunk = [];
 
     for await (const task of cursor) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
       const formattedTask = formatTaskForExport(task);
 
       // Add comma before record (except first)
@@ -384,6 +383,11 @@ class ExportWorker {
 
     // Write JSON closing
     writeStream.write('\n  ]\n}');
+
+    // TODO: The file should be moved to proper storage like S3 or Azure Blob Storage
+    // ..........................................................................
+    // TODO: The file should be deleted after it is moved to the proper storage
+    // ..........................................................................
 
     // Close stream and wait for finish
     writeStream.end();
