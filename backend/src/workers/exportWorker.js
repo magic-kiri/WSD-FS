@@ -80,7 +80,7 @@ class ExportWorker {
    */
   async processJob(job) {
     console.log('🚀 Processing export job:', job.data);
-    const { exportId, filters, format, totalCount, isRepeat } = job.data;
+    const { exportId, filters, format, totalCount } = job.data;
 
     try {
       console.log(`🚀 Processing export job: ${exportId}`);
@@ -107,8 +107,7 @@ class ExportWorker {
         filters,
         format,
         totalCount,
-        job,
-        isRepeat
+        job
       });
 
       // Also cache by exportId for faster direct lookups
@@ -180,8 +179,7 @@ class ExportWorker {
     filters,
     format,
     totalCount,
-    job,
-    isRepeat = false
+    job
   }) {
     // Create exports directory
     const exportDir = path.join(process.cwd(), 'temp-exports');
@@ -210,8 +208,7 @@ class ExportWorker {
           tempFilePath,
           totalCount,
           job,
-          exportId,
-          isRepeat
+          exportId
         );
       } else if (format === 'json') {
         await this.streamToJSON(
@@ -246,7 +243,7 @@ class ExportWorker {
    * @param {Object} job - BullMQ job instance
    * @param {string} exportId - Export ID
    */
-  async streamToCSV(filters, filePath, totalCount, job, exportId, isRepeat) {
+  async streamToCSV(filters, filePath, totalCount, job, exportId) {
     const writeStream = createWriteStream(filePath);
 
     // Write CSV headers
