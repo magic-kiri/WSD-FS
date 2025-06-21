@@ -221,7 +221,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useExportStore } from '../stores/exportStore.js'
 import ExportModal from '../components/ExportModal.vue'
@@ -450,6 +450,13 @@ const formatFilterValue = (key, value) => {
 // Lifecycle
 onMounted(() => {
   fetchData()
+  // Initialize socket listeners for real-time updates
+  exportStore.initializeSocketListeners()
+})
+
+onUnmounted(() => {
+  // Clean up socket listeners
+  exportStore.cleanupSocketListeners()
 })
 
 // Watchers
