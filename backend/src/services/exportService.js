@@ -527,16 +527,16 @@ class ExportService {
    */
   static calculateProgress(status) {
     switch (status) {
-      case 'pending':
-        return 5;
-      case 'processing':
-        return 50;
-      case 'completed':
-        return 100;
-      case 'failed':
-        return 0;
-      default:
-        return 0;
+    case 'pending':
+      return 5;
+    case 'processing':
+      return 50;
+    case 'completed':
+      return 100;
+    case 'failed':
+      return 0;
+    default:
+      return 0;
     }
   }
 
