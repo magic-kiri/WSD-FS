@@ -11,11 +11,11 @@
     <v-card>
       <v-card-title class="pt-6 d-flex align-center">
         <v-icon left color="success">mdi-download</v-icon>
-        Export Tasks
+        {{ props.isRepeat ? 'Repeat Export' : 'Export Tasks' }}
       </v-card-title>
 
       <!-- Format Selection Step -->
-      <div v-if="currentStep === 'format'">
+      <div v-if="currentStep === 'format' && !props.isRepeat">
         <v-card-text class="pa-6">
           <p class="mb-4">
             Select the format for your export. This will include all tasks
@@ -157,7 +157,7 @@
         <v-card-actions class="pa-6">
           <v-spacer></v-spacer>
           <v-btn @click="closeModal">Close</v-btn>
-          <v-btn color="primary" @click="resetModal"> Try Again </v-btn>
+          <v-btn color="primary" @click="handleTryAgain"> Try Again </v-btn>
         </v-card-actions>
       </div>
     </v-card>
@@ -174,10 +174,18 @@ const props = defineProps({
   modelValue: {
     type: Boolean,
     default: false
+  },
+  isRepeat: {
+    type: Boolean,
+    default: false
+  },
+  repeatExportId: {
+    type: String,
+    default: ''
   }
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'export-completed'])
 
 const taskStore = useTaskStore()
 
@@ -210,7 +218,7 @@ const formatFileSize = (bytes) => {
 }
 
 const resetModal = () => {
-  currentStep.value = 'format'
+  currentStep.value = props.isRepeat ? 'progress' : 'format'
   selectedFormat.value = ''
   exportId.value = ''
   progress.value = 0
@@ -226,6 +234,85 @@ const closeModal = () => {
     socket.emit('leave-exports', exportId.value)
     cleanupSocketListeners()
   }
+}
+
+const setupSocketListeners = () => {
+  socket.on('export-progress', handleExportProgress)
+  socket.on('export-completed', handleExportCompleted)
+  socket.on('export-error', handleExportError)
+}
+
+const cleanupSocketListeners = () => {
+  socket.off('export-progress', handleExportProgress)
+  socket.off('export-completed', handleExportCompleted)
+  socket.off('export-error', handleExportError)
+}
+
+const handleExportProgress = (data) => {
+  console.log('Received export-progress:', data)
+  if (data.exportId === exportId.value) {
+    progress.value = data.progress
+    progressMessage.value = data.message || 'Processing export...'
+  }
+}
+
+const handleExportCompleted = (data) => {
+  console.log('Received export-completed:', data)
+  if (data.exportId === exportId.value) {
+    progress.value = 100
+    progressMessage.value = 'Export completed successfully'
+    exportData.value = {
+      taskCount: data.result.taskCount,
+      fileSize: data.result.fileSize,
+      format: data.result.format
+    }
+    currentStep.value = 'success'
+    
+    // Emit completion event for parent to refresh data
+    emit('export-completed', data)
+  }
+}
+
+const handleExportError = (data) => {
+  console.log('Received export-error:', data)
+  if (data.exportId === exportId.value) {
+    errorMessage.value = data.error || 'Export failed'
+    currentStep.value = 'error'
+  }
+}
+
+const cancelExport = () => {
+  if (exportId.value) {
+    socket.emit('leave-exports', exportId.value)
+    cleanupSocketListeners()
+  }
+  closeModal()
+}
+
+const downloadFile = async () => {
+  try {
+    console.log('downloadFile called with exportId:', exportId.value)
+
+    if (!exportId.value) {
+      throw new Error('Export ID is missing. Please try restarting the export.')
+    }
+
+    await apiClient.downloadExport(exportId.value)
+    closeModal()
+  } catch (error) {
+    console.error('Error downloading file:', error)
+    errorMessage.value = error.message || 'Failed to download file'
+    currentStep.value = 'error'
+  }
+}
+
+const handleTryAgain = () => {
+  resetModal()
+  if (props.isRepeat && props.repeatExportId) {
+    // For repeat exports, try the repeat API again
+    initiateRepeatExport()
+  }
+  // For regular exports, just reset to format selection (handled by resetModal)
 }
 
 const initiateExport = async () => {
@@ -303,69 +390,60 @@ const initiateExport = async () => {
   }
 }
 
-const setupSocketListeners = () => {
-  socket.on('export-progress', handleExportProgress)
-  socket.on('export-completed', handleExportCompleted)
-  socket.on('export-error', handleExportError)
-}
-
-const cleanupSocketListeners = () => {
-  socket.off('export-progress', handleExportProgress)
-  socket.off('export-completed', handleExportCompleted)
-  socket.off('export-error', handleExportError)
-}
-
-const handleExportProgress = (data) => {
-  console.log('Received export-progress:', data)
-  if (data.exportId === exportId.value) {
-    progress.value = data.progress
-    progressMessage.value = data.message || 'Processing export...'
-  }
-}
-
-const handleExportCompleted = (data) => {
-  console.log('Received export-completed:', data)
-  if (data.exportId === exportId.value) {
-    progress.value = 100
-    progressMessage.value = 'Export completed successfully'
-    exportData.value = {
-      taskCount: data.result.taskCount,
-      fileSize: data.result.fileSize,
-      format: data.result.format
-    }
-    currentStep.value = 'success'
-  }
-}
-
-const handleExportError = (data) => {
-  console.log('Received export-error:', data)
-  if (data.exportId === exportId.value) {
-    errorMessage.value = data.error || 'Export failed'
-    currentStep.value = 'error'
-  }
-}
-
-const cancelExport = () => {
-  if (exportId.value) {
-    socket.emit('leave-exports', exportId.value)
-    cleanupSocketListeners()
-  }
-  closeModal()
-}
-
-const downloadFile = async () => {
+const initiateRepeatExport = async () => {
   try {
-    console.log('downloadFile called with exportId:', exportId.value)
+    currentStep.value = 'progress'
+    progress.value = 0
+    progressMessage.value = 'Repeating export...'
+    exportId.value = props.repeatExportId
 
-    if (!exportId.value) {
-      throw new Error('Export ID is missing. Please try restarting the export.')
+    // Set up socket listeners first
+    setupSocketListeners()
+
+    // Connect socket and wait for connection if not connected
+    if (!socket.connected) {
+      await new Promise((resolve, reject) => {
+        socket.connect()
+
+        const timeout = setTimeout(() => {
+          reject(new Error('Socket connection timeout'))
+        }, 5000) // 5 second timeout
+
+        const onConnect = () => {
+          clearTimeout(timeout)
+          socket.off('connect', onConnect)
+          socket.off('connect_error', onError)
+          resolve()
+        }
+
+        const onError = (error) => {
+          clearTimeout(timeout)
+          socket.off('connect', onConnect)
+          socket.off('connect_error', onError)
+          reject(error)
+        }
+
+        if (socket.connected) {
+          clearTimeout(timeout)
+          resolve()
+        } else {
+          socket.on('connect', onConnect)
+          socket.on('connect_error', onError)
+        }
+      })
     }
 
-    await apiClient.downloadExport(exportId.value)
-    closeModal()
+    // Join the export room
+    socket.emit('join-exports', exportId.value)
+    console.log(`Joining export room for repeat: ${exportId.value}`)
+
+    // Call the repeat API
+    const response = await apiClient.repeatExport(props.repeatExportId)
+    
+    progressMessage.value = 'Export repeat initiated, processing...'
   } catch (error) {
-    console.error('Error downloading file:', error)
-    errorMessage.value = error.message || 'Failed to download file'
+    console.error('Error repeating export:', error)
+    errorMessage.value = error.message || 'Failed to repeat export'
     currentStep.value = 'error'
   }
 }
@@ -375,6 +453,11 @@ watch(localDialog, (newValue, oldValue) => {
   if (newValue && !oldValue) {
     // Only reset when opening from closed state
     resetModal()
+    
+    // If it's a repeat export, start immediately
+    if (props.isRepeat && props.repeatExportId) {
+      initiateRepeatExport()
+    }
   } else if (!newValue && oldValue) {
     // Only cleanup when closing from open state
     if (exportId.value) {

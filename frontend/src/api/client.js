@@ -269,6 +269,16 @@ class ApiClient {
   async getExportHistory(params = {}) {
     return this.get('/exports/history', params)
   }
+
+  /**
+   * Repeats a failed export
+   * @async
+   * @param {string} exportId - Export identifier to repeat
+   * @returns {Promise<Object>} Repeat export response
+   */
+  async repeatExport(exportId) {
+    return this.post(`/exports/${exportId}/repeat`, {})
+  }
 }
 
 export default new ApiClient()

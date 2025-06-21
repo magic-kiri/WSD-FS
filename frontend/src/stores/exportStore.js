@@ -136,19 +136,29 @@ export const useExportStore = defineStore('exportStore', () => {
   }
 
   const repeatExport = async (exportId) => {
-    const originalExport = exports.value.find((exp) => exp.id === exportId)
-    if (!originalExport) {
-      throw new Error('Export not found')
-    }
+    try {
+      const response = await apiClient.repeatExport(exportId)
 
-    // Extract export configuration from original export
-    const exportData = {
-      format: originalExport.format,
-      filters: originalExport.filters,
-      options: originalExport.options
-    }
+      // Update the existing export in the list
+      const exportIndex = exports.value.findIndex(
+        (exp) => exp.exportId === exportId
+      )
+      if (exportIndex !== -1) {
+        exports.value[exportIndex] = {
+          ...exports.value[exportIndex],
+          status: 'pending',
+          errorMessage: null,
+          completedAt: null,
+          fileSize: 0,
+          taskCount: 0
+        }
+      }
 
-    return await initiateExport(exportData)
+      return response.data
+    } catch (err) {
+      console.error('Error repeating export:', err)
+      throw err
+    }
   }
 
   const setPage = (page) => {

@@ -97,25 +97,9 @@
               </v-tooltip>
             </v-btn>
 
-            <!-- Refresh Status Button -->
-            <v-btn
-              v-else-if="
-                exportItem.status === 'pending' ||
-                exportItem.status === 'processing'
-              "
-              icon
-              size="small"
-              variant="text"
-              color="info"
-              :loading="refreshingIds.includes(exportItem.exportId)"
-              @click="refreshStatus(exportItem.exportId)"
-            >
-              <v-icon size="16">mdi-refresh</v-icon>
-              <v-tooltip activator="parent" location="top"> Refresh </v-tooltip>
-            </v-btn>
-
             <!-- Repeat Export Button -->
             <v-btn
+              v-if="exportItem.status === 'failed'"
               icon
               size="small"
               variant="text"

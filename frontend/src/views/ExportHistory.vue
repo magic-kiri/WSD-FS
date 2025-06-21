@@ -155,24 +155,9 @@
               </v-tooltip>
             </v-btn>
 
-            <!-- Refresh Status Button -->
-            <v-btn
-              v-if="item.status === 'pending' || item.status === 'processing'"
-              icon="mdi-refresh"
-              size="small"
-              variant="text"
-              color="info"
-              :loading="refreshingIds.includes(item.exportId)"
-              @click="refreshStatus(item.exportId)"
-            >
-              <v-icon>mdi-refresh</v-icon>
-              <v-tooltip activator="parent" location="top">
-                Refresh Status
-              </v-tooltip>
-            </v-btn>
-
             <!-- Repeat Export Button -->
             <v-btn
+              v-if="item.status === 'failed'"
               icon="mdi-repeat"
               size="small"
               variant="text"
@@ -217,6 +202,14 @@
         </div>
       </v-card-actions>
     </v-card>
+
+    <!-- Export Progress Modal -->
+    <ExportModal 
+      v-model="exportModalOpen" 
+      :is-repeat="true"
+      :repeat-export-id="repeatExportId"
+      @export-completed="onExportCompleted"
+    />
   </div>
 </template>
 
@@ -224,6 +217,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useExportStore } from '../stores/exportStore.js'
+import ExportModal from '../components/ExportModal.vue'
 
 const router = useRouter()
 const exportStore = useExportStore()
@@ -232,6 +226,8 @@ const exportStore = useExportStore()
 const downloadingIds = ref([])
 const refreshingIds = ref([])
 const repeatingIds = ref([])
+const exportModalOpen = ref(false)
+const repeatExportId = ref('')
 
 // Table configuration
 const tableHeaders = [
@@ -288,13 +284,24 @@ const refreshStatus = async (exportId) => {
   }
 }
 
+const onExportCompleted = () => {
+  // Handle export completion by refreshing the data
+  fetchData()
+}
+
 const repeatExport = async (exportId) => {
   repeatingIds.value.push(exportId)
   try {
-    await exportStore.repeatExport(exportId)
-    // Could show success notification here
+    // Set up modal for progress tracking
+    repeatExportId.value = exportId
+    exportModalOpen.value = true
+    
+    // The modal will handle the actual repeat export API call
+    // We don't need to call the store method here
   } catch (error) {
     console.error('Repeat export failed:', error)
+    // Close modal on error
+    exportModalOpen.value = false
     // Could show error notification here
   } finally {
     repeatingIds.value = repeatingIds.value.filter((id) => id !== exportId)
