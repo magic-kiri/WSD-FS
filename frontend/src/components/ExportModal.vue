@@ -267,7 +267,7 @@ const handleExportCompleted = (data) => {
       format: data.result.format
     }
     currentStep.value = 'success'
-    
+
     // Emit completion event for parent to refresh data
     emit('export-completed', data)
   }
@@ -438,8 +438,8 @@ const initiateRepeatExport = async () => {
     console.log(`Joining export room for repeat: ${exportId.value}`)
 
     // Call the repeat API
-    const response = await apiClient.repeatExport(props.repeatExportId)
-    
+    await apiClient.repeatExport(props.repeatExportId)
+
     progressMessage.value = 'Export repeat initiated, processing...'
   } catch (error) {
     console.error('Error repeating export:', error)
@@ -453,7 +453,7 @@ watch(localDialog, (newValue, oldValue) => {
   if (newValue && !oldValue) {
     // Only reset when opening from closed state
     resetModal()
-    
+
     // If it's a repeat export, start immediately
     if (props.isRepeat && props.repeatExportId) {
       initiateRepeatExport()

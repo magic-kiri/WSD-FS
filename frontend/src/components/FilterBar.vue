@@ -186,7 +186,9 @@
                         type="date"
                         variant="outlined"
                         density="compact"
-                        @update:model-value="updateFilters({ createdTo: $event })"
+                        @update:model-value="
+                          updateFilters({ createdTo: $event })
+                        "
                       ></v-text-field>
                     </v-col>
                   </v-row>

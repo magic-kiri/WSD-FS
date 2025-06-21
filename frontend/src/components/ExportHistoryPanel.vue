@@ -139,7 +139,6 @@ const exportStore = useExportStore()
 
 // Reactive state
 const downloadingIds = ref([])
-const refreshingIds = ref([])
 const repeatingIds = ref([])
 
 // Methods
@@ -155,17 +154,6 @@ const downloadExport = async (exportId) => {
     console.error('Download failed:', error)
   } finally {
     downloadingIds.value = downloadingIds.value.filter((id) => id !== exportId)
-  }
-}
-
-const refreshStatus = async (exportId) => {
-  refreshingIds.value.push(exportId)
-  try {
-    await exportStore.checkExportStatus(exportId)
-  } catch (error) {
-    console.error('Status refresh failed:', error)
-  } finally {
-    refreshingIds.value = refreshingIds.value.filter((id) => id !== exportId)
   }
 }
 

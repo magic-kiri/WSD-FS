@@ -477,14 +477,14 @@ class AnalyticsService {
     if (isNewlyCreated) return 'created';
 
     switch (task.status) {
-      case 'pending':
-        return 'updated';
-      case 'in-progress':
-        return 'started';
-      case 'completed':
-        return 'completed';
-      default:
-        return 'updated';
+    case 'pending':
+      return 'updated';
+    case 'in-progress':
+      return 'started';
+    case 'completed':
+      return 'completed';
+    default:
+      return 'updated';
     }
   }
 
@@ -496,16 +496,16 @@ class AnalyticsService {
    */
   static getExportAction(status) {
     switch (status) {
-      case 'pending':
-        return 'started';
-      case 'processing':
-        return 'processing';
-      case 'completed':
-        return 'completed';
-      case 'failed':
-        return 'failed';
-      default:
-        return 'created';
+    case 'pending':
+      return 'started';
+    case 'processing':
+      return 'processing';
+    case 'completed':
+      return 'completed';
+    case 'failed':
+      return 'failed';
+    default:
+      return 'created';
     }
   }
 
@@ -517,14 +517,14 @@ class AnalyticsService {
    */
   static getTaskIcon(status) {
     switch (status) {
-      case 'pending':
-        return 'mdi-clock-outline';
-      case 'in-progress':
-        return 'mdi-progress-clock';
-      case 'completed':
-        return 'mdi-check-circle';
-      default:
-        return 'mdi-format-list-checks';
+    case 'pending':
+      return 'mdi-clock-outline';
+    case 'in-progress':
+      return 'mdi-progress-clock';
+    case 'completed':
+      return 'mdi-check-circle';
+    default:
+      return 'mdi-format-list-checks';
     }
   }
 
@@ -551,14 +551,14 @@ class AnalyticsService {
    */
   static getTaskColor(status) {
     switch (status) {
-      case 'pending':
-        return 'warning';
-      case 'in-progress':
-        return 'info';
-      case 'completed':
-        return 'success';
-      default:
-        return 'grey';
+    case 'pending':
+      return 'warning';
+    case 'in-progress':
+      return 'info';
+    case 'completed':
+      return 'success';
+    default:
+      return 'grey';
     }
   }
 
@@ -570,16 +570,16 @@ class AnalyticsService {
    */
   static getExportColor(status) {
     switch (status) {
-      case 'pending':
-        return 'warning';
-      case 'processing':
-        return 'info';
-      case 'completed':
-        return 'success';
-      case 'failed':
-        return 'error';
-      default:
-        return 'secondary';
+    case 'pending':
+      return 'warning';
+    case 'processing':
+      return 'info';
+    case 'completed':
+      return 'success';
+    case 'failed':
+      return 'error';
+    default:
+      return 'secondary';
     }
   }
 }

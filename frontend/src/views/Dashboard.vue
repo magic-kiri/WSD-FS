@@ -48,7 +48,10 @@
     </v-row>
 
     <!-- Export Metrics Row - Compact Design -->
-    <v-row class="mt-2" v-if="analyticsStore.analytics.exportMetrics.totalExports > 0">
+    <v-row
+      v-if="analyticsStore.analytics.exportMetrics.totalExports > 0"
+      class="mt-2"
+    >
       <v-col cols="12" md="3">
         <metric-card
           title="Total Exports"
@@ -111,7 +114,11 @@
         </v-card>
       </v-col>
       <!-- Export Status Chart - Only if exports exist -->
-      <v-col cols="12" md="4" v-if="analyticsStore.analytics.exportMetrics.totalExports > 0">
+      <v-col
+        v-if="analyticsStore.analytics.exportMetrics.totalExports > 0"
+        cols="12"
+        md="4"
+      >
         <v-card class="chart-container equal-height-chart">
           <v-card-title class="d-flex align-center">
             <v-icon class="mr-2" color="secondary">mdi-chart-pie</v-icon>
@@ -176,12 +183,12 @@ onMounted(() => {
 
 .chart-container:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
 }
 
 .page-title {
   font-weight: 300;
   margin-bottom: 1.5rem;
-  color: rgba(0,0,0,0.87);
+  color: rgba(0, 0, 0, 0.87);
 }
 </style>

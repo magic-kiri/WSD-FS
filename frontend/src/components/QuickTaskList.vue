@@ -3,10 +3,10 @@
     <v-card-title class="d-flex align-center">
       Recent Tasks
       <v-spacer></v-spacer>
-      <v-btn 
-        size="small" 
-        color="secondary" 
-        variant="text" 
+      <v-btn
+        size="small"
+        color="secondary"
+        variant="text"
         :to="'/exports'"
         class="mr-2"
       >

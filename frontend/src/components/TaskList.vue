@@ -15,7 +15,11 @@
       <h2 class="page-title">Tasks</h2>
       <v-spacer></v-spacer>
       <div class="d-flex ga-2">
-        <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          @click="showCreateDialog = true"
+        >
           New Task
         </v-btn>
       </div>
@@ -82,7 +86,10 @@
                 <span class="text-caption text-medium-emphasis">
                   Created {{ formatDate(task.createdAt) }}
                 </span>
-                <span v-if="task.completedAt" class="text-caption text-medium-emphasis">
+                <span
+                  v-if="task.completedAt"
+                  class="text-caption text-medium-emphasis"
+                >
                   Completed {{ formatDate(task.completedAt) }}
                 </span>
               </div>
@@ -195,16 +202,16 @@ const formatDate = (date) => {
     console.warn('🔍 formatDate received null/undefined date:', date)
     return 'No date'
   }
-  
+
   try {
     const dateObj = new Date(date)
-    
+
     // Check if the date is valid
     if (isNaN(dateObj.getTime())) {
       console.warn('🔍 formatDate received invalid date:', date)
       return 'Invalid date'
     }
-    
+
     console.log('🔍 date', date)
     const formatted = dateObj.toLocaleDateString('en-US', {
       year: 'numeric',

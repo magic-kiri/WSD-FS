@@ -41,8 +41,13 @@
       ></v-progress-circular>
     </v-card-text>
 
-    <v-card-text v-else-if="unifiedActivity.length === 0" class="text-center py-6">
-      <v-icon size="48" color="grey-lighten-1" class="mb-2">mdi-timeline-outline</v-icon>
+    <v-card-text
+      v-else-if="unifiedActivity.length === 0"
+      class="text-center py-6"
+    >
+      <v-icon size="48" color="grey-lighten-1" class="mb-2"
+        >mdi-timeline-outline</v-icon
+      >
       <p class="text-body-2 text-medium-emphasis">No recent activity</p>
     </v-card-text>
 
@@ -51,7 +56,10 @@
         v-for="activity in unifiedActivity"
         :key="`${activity.type}-${activity.id}`"
         class="activity-item"
-        :class="{ 'task-activity': activity.type === 'task', 'export-activity': activity.type === 'export' }"
+        :class="{
+          'task-activity': activity.type === 'task',
+          'export-activity': activity.type === 'export'
+        }"
       >
         <template #prepend>
           <v-avatar
@@ -74,17 +82,23 @@
         </v-list-item-title>
 
         <v-list-item-subtitle class="text-caption">
-          <span class="activity-action">{{ formatAction(activity.action) }}</span>
-          <span class="activity-time">{{ formatTimeAgo(activity.timestamp) }}</span>
-          <br>
+          <span class="activity-action">{{
+            formatAction(activity.action)
+          }}</span>
+          <span class="activity-time">{{
+            formatTimeAgo(activity.timestamp)
+          }}</span>
+          <br />
           <span class="text-medium-emphasis">{{ activity.subtitle }}</span>
         </v-list-item-subtitle>
 
         <template #append>
-          <div class="d-flex ga-1" v-if="activity.actionable">
+          <div v-if="activity.actionable" class="d-flex ga-1">
             <!-- Download Button for completed exports -->
             <v-btn
-              v-if="activity.type === 'export' && activity.status === 'completed'"
+              v-if="
+                activity.type === 'export' && activity.status === 'completed'
+              "
               icon
               size="small"
               variant="text"
@@ -146,7 +160,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAnalyticsStore } from '../stores/analyticsStore.js'
 import { useExportStore } from '../stores/exportStore.js'
@@ -160,7 +174,9 @@ const downloadingIds = ref([])
 const repeatingIds = ref([])
 
 // Computed
-const unifiedActivity = computed(() => analyticsStore.analytics.unifiedActivity || [])
+const unifiedActivity = computed(
+  () => analyticsStore.analytics.unifiedActivity || []
+)
 
 // Methods
 const navigateToTasks = () => {
@@ -292,4 +308,4 @@ const formatTimeAgo = (timestamp) => {
 .export-activity {
   border-left: 3px solid #9c27b0;
 }
-</style> 
+</style>

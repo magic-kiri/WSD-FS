@@ -47,18 +47,23 @@
         <template #activator="{ props }">
           <v-btn icon v-bind="props">
             <v-avatar size="32">
-              <img src="https://randomuser.me/api/portraits/men/85.jpg" alt="User Avatar">
+              <img
+                src="https://randomuser.me/api/portraits/men/85.jpg"
+                alt="User Avatar"
+              />
             </v-avatar>
           </v-btn>
         </template>
         <v-list>
           <v-list-item>
-            <v-list-item-title class="font-weight-medium">User Menu</v-list-item-title>
+            <v-list-item-title class="font-weight-medium"
+              >User Menu</v-list-item-title
+            >
             <v-list-item-subtitle>Quick Actions</v-list-item-subtitle>
           </v-list-item>
-          
+
           <v-divider></v-divider>
-          
+
           <v-list-item @click="navigateToExportHistory">
             <template #prepend>
               <v-icon>mdi-download-multiple</v-icon>
@@ -66,7 +71,7 @@
             <v-list-item-title>Export History</v-list-item-title>
             <v-list-item-subtitle>View and manage exports</v-list-item-subtitle>
           </v-list-item>
-          
+
           <v-list-item @click="navigateToTasks">
             <template #prepend>
               <v-icon>mdi-format-list-checks</v-icon>
@@ -74,7 +79,7 @@
             <v-list-item-title>My Tasks</v-list-item-title>
             <v-list-item-subtitle>Manage your tasks</v-list-item-subtitle>
           </v-list-item>
-          
+
           <v-list-item @click="navigateToAnalytics">
             <template #prepend>
               <v-icon>mdi-chart-line</v-icon>
@@ -82,15 +87,17 @@
             <v-list-item-title>Analytics</v-list-item-title>
             <v-list-item-subtitle>View detailed reports</v-list-item-subtitle>
           </v-list-item>
-          
+
           <v-divider></v-divider>
-          
+
           <v-list-item @click="toggleTheme">
             <template #prepend>
               <v-icon>{{ themeIcon }}</v-icon>
             </template>
             <v-list-item-title>
-              {{ theme.global.name.value === 'dark' ? 'Light Mode' : 'Dark Mode' }}
+              {{
+                theme.global.name.value === 'dark' ? 'Light Mode' : 'Dark Mode'
+              }}
             </v-list-item-title>
             <v-list-item-subtitle>Toggle appearance</v-list-item-subtitle>
           </v-list-item>

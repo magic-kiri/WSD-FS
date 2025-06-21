@@ -204,8 +204,8 @@
     </v-card>
 
     <!-- Export Progress Modal -->
-    <ExportModal 
-      v-model="exportModalOpen" 
+    <ExportModal
+      v-model="exportModalOpen"
       :is-repeat="true"
       :repeat-export-id="repeatExportId"
       @export-completed="onExportCompleted"
@@ -224,7 +224,6 @@ const exportStore = useExportStore()
 
 // Reactive state
 const downloadingIds = ref([])
-const refreshingIds = ref([])
 const repeatingIds = ref([])
 const exportModalOpen = ref(false)
 const repeatExportId = ref('')
@@ -273,17 +272,6 @@ const downloadExport = async (exportId) => {
   }
 }
 
-const refreshStatus = async (exportId) => {
-  refreshingIds.value.push(exportId)
-  try {
-    await exportStore.checkExportStatus(exportId)
-  } catch (error) {
-    console.error('Status refresh failed:', error)
-  } finally {
-    refreshingIds.value = refreshingIds.value.filter((id) => id !== exportId)
-  }
-}
-
 const onExportCompleted = () => {
   // Handle export completion by refreshing the data
   fetchData()
@@ -295,7 +283,7 @@ const repeatExport = async (exportId) => {
     // Set up modal for progress tracking
     repeatExportId.value = exportId
     exportModalOpen.value = true
-    
+
     // The modal will handle the actual repeat export API call
     // We don't need to call the store method here
   } catch (error) {
