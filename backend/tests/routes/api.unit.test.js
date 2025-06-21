@@ -104,12 +104,6 @@ describe('API Routes Unit Tests', { timeout: 10000 }, () => {
       (r) => r.path === '/analytics' && r.method === 'get'
     );
     assert(analyticsRoute, 'Should have GET /analytics route');
-
-    // Should have cache clear route
-    const cacheRoute = routes.find(
-      (r) => r.path === '/cache/clear' && r.method === 'get'
-    );
-    assert(cacheRoute, 'Should have GET /cache/clear route');
   });
 
   test('should set socket handlers correctly', () => {

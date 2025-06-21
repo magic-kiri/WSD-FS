@@ -465,55 +465,6 @@ router.get('/analytics', async (req, res, next) => {
 });
 
 /**
- * GET /cache/clear - Clear all Redis caches
- * @name ClearCache
- * @function
- * @returns {Object} Cache clearing result with count of cleared keys
- */
-router.get('/cache/clear', async (req, res, next) => {
-  try {
-    // Get all keys in Redis
-    const keys = await redisClient.keys('*');
-
-    if (keys.length === 0) {
-      return res.json({
-        success: true,
-        message: 'No cache keys found to clear',
-        clearedKeys: 0,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Delete all keys
-    const result = await redisClient.del(...keys);
-
-    console.log(`🗑️ Cleared ${result} Redis cache keys:`, keys);
-
-    res.json({
-      success: true,
-      message: `Successfully cleared ${result} cache keys`,
-      clearedKeys: result,
-      keyTypes: {
-        taskCaches: keys.filter((key) => key.startsWith('task:')).length,
-        exportCaches: keys.filter((key) => key.startsWith('export:')).length,
-        analyticsCaches: keys.filter((key) => key.includes('task_metrics'))
-          .length,
-        otherCaches: keys.filter(
-          (key) =>
-            !key.startsWith('task:') &&
-            !key.startsWith('export:') &&
-            !key.includes('task_metrics')
-        ).length
-      },
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('❌ Error clearing Redis cache:', error);
-    next(error);
-  }
-});
-
-/**
  * GET /health - Health check endpoint
  * @name HealthCheck
  * @function
