@@ -5,6 +5,10 @@
 
 import express from 'express';
 import { createReadStream } from 'fs';
+import {
+  exportRateLimit,
+  generalRateLimit
+} from '../middleware/rateLimiters.js';
 import ExportService from '../services/exportService.js';
 
 const router = express.Router();
@@ -35,7 +39,7 @@ export const setSocketHandlers = (handlers) => {
  * @param {string} req.body.format - Export format (csv/json)
  * @returns {Object} Export initiation result with exportId
  */
-router.post('/', async (req, res, next) => {
+router.post('/', exportRateLimit, async (req, res, next) => {
   try {
     const { filters = {}, format } = req.body;
     console.dir(req.body, { depth: null });
@@ -95,7 +99,7 @@ router.get('/:exportId/status', async (req, res, next) => {
  * @param {string} req.params.exportId - Export identifier
  * @returns {File} Export file download
  */
-router.get('/:exportId/download', async (req, res, next) => {
+router.get('/:exportId/download', generalRateLimit, async (req, res, next) => {
   try {
     const { exportId } = req.params;
     const exportData = await ExportService.getExportData(exportId);
@@ -180,7 +184,7 @@ router.get('/history', async (req, res, next) => {
  * @param {string} req.params.exportId - Original export identifier
  * @returns {Object} New export initiation result
  */
-router.post('/:exportId/repeat', async (req, res, next) => {
+router.post('/:exportId/repeat', exportRateLimit, async (req, res, next) => {
   try {
     const { exportId } = req.params;
 
