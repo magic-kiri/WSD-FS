@@ -23,6 +23,15 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     tasksCreatedToday: 0,
     tasksCompletedToday: 0,
     recentActivity: [],
+    unifiedActivity: [],
+    exportMetrics: {
+      totalExports: 0,
+      completedExports: 0,
+      failedExports: 0,
+      successRate: 0,
+      todayExports: 0,
+      recentExports: []
+    },
     lastUpdated: null
   })
 
@@ -63,6 +72,19 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     {
       name: 'High',
       value: analytics.value.tasksByPriority.high,
+      color: '#FF5252'
+    }
+  ])
+
+  const exportStatusData = computed(() => [
+    {
+      name: 'Completed',
+      value: analytics.value.exportMetrics.completedExports,
+      color: '#4CAF50'
+    },
+    {
+      name: 'Failed',
+      value: analytics.value.exportMetrics.failedExports,
       color: '#FF5252'
     }
   ])
@@ -217,6 +239,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     connected,
     statusData,
     priorityData,
+    exportStatusData,
     fetchAnalytics,
     updateAnalytics,
     addNotification,

@@ -7,6 +7,9 @@ export default [
   ...vue.configs['flat/recommended'],
   prettier,
   {
+    ignores: ['node_modules/**', 'dist/**', 'coverage/**', '.vscode/**']
+  },
+  {
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: 'module',
@@ -18,7 +21,14 @@ export default [
         navigator: 'readonly',
         localStorage: 'readonly',
         sessionStorage: 'readonly',
-        fetch: 'readonly'
+        fetch: 'readonly',
+        URLSearchParams: 'readonly',
+        URL: 'readonly',
+        Blob: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly'
       }
     },
     rules: {
@@ -35,6 +45,22 @@ export default [
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'vue/multi-word-component-names': 'off',
       'vue/no-unused-vars': 'error'
+    }
+  },
+  {
+    files: ['tests/**/*.js', '**/*.test.js', '**/*.spec.js'],
+    languageOptions: {
+      globals: {
+        global: 'readonly',
+        URLSearchParams: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        Buffer: 'readonly',
+        URL: 'readonly',
+        Blob: 'readonly'
+      }
     }
   }
 ]

@@ -178,6 +178,16 @@ No authentication required for this technical assessment.
 |--------|----------|-------------|
 | GET | `/analytics` | Get task analytics and metrics |
 
+#### Exports
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/exports` | Initiate a new export request |
+| GET | `/exports/:exportId/status` | Get export status and progress |
+| GET | `/exports/:exportId/download` | Download completed export file |
+| GET | `/exports/history` | Get user's export history with pagination |
+| POST | `/exports/:exportId/repeat` | Repeat a failed export |
+
 #### Health
 
 | Method | Endpoint | Description |
@@ -210,6 +220,31 @@ curl -X PUT http://localhost:3001/api/tasks/123456 \
   -d '{"status": "completed"}'
 ```
 
+#### POST /exports
+```bash
+curl -X POST http://localhost:3001/api/exports \
+  -H "Content-Type: application/json" \
+  -d '{
+    "format": "csv",
+    "filters": {
+      "status": ["completed", "in-progress"],
+      "priority": "high",
+      "createdFrom": "2024-01-01",
+      "createdTo": "2024-12-31"
+    }
+  }'
+```
+
+#### GET /exports/:exportId/status
+```bash
+curl "http://localhost:3001/api/exports/abc123/status"
+```
+
+#### GET /exports/history
+```bash
+curl "http://localhost:3001/api/exports/history?page=1&limit=10&status=completed"
+```
+
 ### Query Parameters (GET /tasks)
 
 - `page`: Page number (default: 1)
@@ -218,6 +253,50 @@ curl -X PUT http://localhost:3001/api/tasks/123456 \
 - `priority`: Filter by priority (low, medium, high)
 - `sortBy`: Sort field (createdAt, updatedAt, title, priority, status)
 - `sortOrder`: Sort direction (asc, desc)
+
+### Query Parameters (GET /exports/history)
+
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 20)
+- `status`: Filter by export status (pending, processing, completed, failed, expired)
+- `format`: Filter by export format (csv, json)
+
+### Export Request Schema
+
+```json
+{
+  "format": "csv|json (required)",
+  "filters": {
+    "text": "string (search in title/description)",
+    "status": "string|array (task status filter)",
+    "priority": "string|array (task priority filter)",
+    "createdFrom": "string (YYYY-MM-DD format)",
+    "createdTo": "string (YYYY-MM-DD format)",
+    "completedFrom": "string (YYYY-MM-DD format)",
+    "completedTo": "string (YYYY-MM-DD format)"
+  }
+}
+```
+
+### Export Response Schema
+
+```json
+{
+  "exportId": "string (unique identifier)",
+  "status": "pending|processing|completed|failed|expired",
+  "format": "csv|json",
+  "filters": "object (applied filters)",
+  "progress": "number (0-100 percentage)",
+  "totalRecords": "number (total tasks to export)",
+  "processedRecords": "number (tasks processed so far)",
+  "fileSize": "number (file size in bytes)",
+  "downloadUrl": "string (download endpoint)",
+  "createdAt": "ISO 8601 date",
+  "completedAt": "ISO 8601 date or null",
+  "expiresAt": "ISO 8601 date",
+  "cached": "boolean (whether result was cached)"
+}
+```
 
 ### Task Schema
 

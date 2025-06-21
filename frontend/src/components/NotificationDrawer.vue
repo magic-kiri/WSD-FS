@@ -93,6 +93,6 @@ function formatTimestamp(timestamp) {
 
 <style scoped>
 .notification-item {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.1);
 }
 </style>

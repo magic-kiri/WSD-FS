@@ -12,14 +12,14 @@
 // Global styles
 .app-container {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: rgb(var(--v-theme-background));
 }
 
 .page-title {
   font-size: 2rem;
   font-weight: 300;
   margin-bottom: 2rem;
-  color: var(--primary-color);
+  color: rgb(var(--v-theme-primary));
 }
 
 // Task status colors
@@ -50,11 +50,11 @@
 
 // Common card shadow
 .card-shadow {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(var(--v-theme-on-surface), 0.1);
   transition: box-shadow 0.3s ease;
 
   &:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 16px rgba(var(--v-theme-on-surface), 0.15);
   }
 }
 
@@ -121,7 +121,7 @@
     justify-content: flex-end;
     margin-top: 2rem;
     padding-top: 1rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
   }
 }
 
@@ -129,7 +129,7 @@
 .chart-container {
   @extend .card-shadow;
   padding: 1.5rem;
-  background: white;
+  background: rgb(var(--v-theme-surface));
   border-radius: 8px;
 
   .chart-title {
@@ -137,6 +137,7 @@
     font-weight: 500;
     margin-bottom: 1rem;
     text-align: center;
+    color: rgb(var(--v-theme-on-surface));
   }
 }
 
@@ -146,7 +147,7 @@
     display: flex;
     align-items: center;
     padding: 0.75rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 
     &:last-child {
       border-bottom: none;
