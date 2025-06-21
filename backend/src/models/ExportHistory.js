@@ -31,6 +31,7 @@ export const EXPORT_STATUSES = ['pending', 'processing', 'completed', 'failed'];
  * @property {Date} completedAt - Export completion timestamp
  * @property {number} downloadCount - Number of times downloaded
  * @property {string} errorMessage - Error message if export failed
+ * @property {string} filePath - Path to the export file on disk
  */
 const exportHistorySchema = new mongoose.Schema(
   {
@@ -79,6 +80,11 @@ const exportHistorySchema = new mongoose.Schema(
     errorMessage: {
       type: String,
       default: null
+    },
+    filePath: {
+      type: String,
+      default: null,
+      index: true
     }
   },
   {
@@ -134,16 +140,6 @@ exportHistorySchema.pre('save', function (next) {
   }
   next();
 });
-
-/**
- * Increments download count
- * @method incrementDownloadCount
- * @returns {Promise<void>}
- */
-exportHistorySchema.methods.incrementDownloadCount = async function () {
-  this.downloadCount += 1;
-  await this.save();
-};
 
 /**
  * Export History model for managing export tracking documents in MongoDB

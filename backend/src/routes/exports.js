@@ -4,6 +4,7 @@
  */
 
 import express from 'express';
+import { createReadStream } from 'fs';
 import ExportService from '../services/exportService.js';
 
 const router = express.Router();
@@ -98,6 +99,7 @@ router.get('/:exportId/download', async (req, res, next) => {
   try {
     const { exportId } = req.params;
     const exportData = await ExportService.getExportData(exportId);
+    console.dir({ exportData }, { depth: null });
 
     res.setHeader('Content-Type', exportData.mimeType);
     res.setHeader(
@@ -106,12 +108,29 @@ router.get('/:exportId/download', async (req, res, next) => {
     );
     res.setHeader('Content-Length', exportData.fileSize);
 
-    res.send(exportData.data);
+    console.log(
+      `📤 Streaming export file: ${exportData.filename} (${(exportData.fileSize / 1024 / 1024).toFixed(2)}MB)`
+    );
+
+    const readStream = createReadStream(exportData.filePath);
+
+    readStream.on('error', (error) => {
+      console.error('Error streaming export file:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: 'Error streaming export file'
+        });
+      }
+    });
+
+    readStream.pipe(res);
   } catch (error) {
     if (
       error.message === 'Export not found' ||
       error.message.includes('not ready') ||
-      error.message.includes('expired')
+      error.message.includes('expired') ||
+      error.message.includes('file not found')
     ) {
       return res.status(404).json({
         success: false,
@@ -151,6 +170,41 @@ router.get('/history', async (req, res, next) => {
       data: history
     });
   } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /exports/:exportId/repeat - Repeat a failed export
+ * @name RepeatExport
+ * @function
+ * @param {string} req.params.exportId - Original export identifier
+ * @returns {Object} New export initiation result
+ */
+router.post('/:exportId/repeat', async (req, res, next) => {
+  try {
+    const { exportId } = req.params;
+
+    const result = await ExportService.repeatExport(exportId);
+
+    res.status(201).json({
+      success: true,
+      data: result,
+      message: 'Export repeated successfully'
+    });
+  } catch (error) {
+    if (error.message === 'Export not found') {
+      return res.status(404).json({
+        success: false,
+        message: error.message
+      });
+    }
+    if (error.message.includes('cannot be repeated')) {
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
     next(error);
   }
 });

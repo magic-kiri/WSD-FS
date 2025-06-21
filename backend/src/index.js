@@ -8,6 +8,8 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 import { connectMongoDB } from './config/database.js';
 import { connectRedis } from './config/redis.js';
@@ -103,6 +105,11 @@ const startServer = async () => {
   try {
     await connectMongoDB();
     await connectRedis();
+
+    // Create temp-exports directory if it doesn't exist
+    const exportDir = path.join(process.cwd(), 'temp-exports');
+    await fs.mkdir(exportDir, { recursive: true });
+    console.log('📁 Export directory created:', exportDir);
 
     // Fix any existing data issues
     console.log('🔧 Running data consistency checks...');

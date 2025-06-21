@@ -78,10 +78,10 @@
                 >
                   {{ formatPriority(task.priority) }}
                 </v-chip>
-                <span class="text-caption">
+                <span class="text-caption text-medium-emphasis">
                   Created {{ formatDate(task.createdAt) }}
                 </span>
-                <span v-if="task.completedAt" class="text-caption">
+                <span v-if="task.completedAt" class="text-caption text-medium-emphasis">
                   Completed {{ formatDate(task.completedAt) }}
                 </span>
               </div>
@@ -185,11 +185,32 @@ const formatPriority = (priority) => {
 }
 
 const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
+  if (!date) {
+    console.warn('🔍 formatDate received null/undefined date:', date)
+    return 'No date'
+  }
+  
+  try {
+    const dateObj = new Date(date)
+    
+    // Check if the date is valid
+    if (isNaN(dateObj.getTime())) {
+      console.warn('🔍 formatDate received invalid date:', date)
+      return 'Invalid date'
+    }
+    
+    console.log('🔍 date', date)
+    const formatted = dateObj.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+    console.log('🔍 formatted date', formatted)
+    return formatted
+  } catch (error) {
+    console.error('🔍 Error formatting date:', error, 'Original date:', date)
+    return 'Date error'
+  }
 }
 
 const editTask = (task) => {
@@ -279,10 +300,5 @@ onUnmounted(() => {
 
 .task-meta .v-chip {
   margin-right: 0;
-}
-
-.task-meta .text-caption {
-  color: rgb(var(--v-theme-on-surface-variant));
-  font-size: 0.75rem;
 }
 </style>

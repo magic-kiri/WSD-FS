@@ -115,15 +115,6 @@ export function formatTaskForExport(task) {
 }
 
 /**
- * Prepares task data for export (legacy function for backward compatibility)
- * @param {Array} tasks - Array of task documents
- * @returns {Array} Array of formatted task objects
- */
-export function prepareTaskData(tasks) {
-  return tasks.map((task) => formatTaskForExport(task));
-}
-
-/**
  * Convert task object to CSV row
  * @param {Object} task - Formatted task object
  * @returns {string} CSV row
@@ -179,53 +170,6 @@ export function formatChunksAsJSON(chunks, totalTasks) {
       exportedAt: new Date().toISOString(),
       totalTasks,
       tasks
-    },
-    null,
-    2
-  );
-}
-
-/**
- * Converts task data to CSV format (legacy function for backward compatibility)
- * @param {Array} taskData - Formatted task data
- * @returns {string} CSV formatted string
- */
-export function formatAsCSV(taskData) {
-  if (taskData.length === 0) return '';
-
-  const headers = Object.keys(taskData[0]);
-  const csvHeaders = headers.join(',');
-
-  const csvRows = taskData.map((row) => {
-    return headers
-      .map((header) => {
-        const value = row[header];
-        // Escape quotes and wrap in quotes if contains comma, quote, or newline
-        if (
-          typeof value === 'string' &&
-          (value.includes(',') || value.includes('"') || value.includes('\n'))
-        ) {
-          return `"${value.replace(/"/g, '""')}"`;
-        }
-        return value;
-      })
-      .join(',');
-  });
-
-  return [csvHeaders, ...csvRows].join('\n');
-}
-
-/**
- * Converts task data to JSON format (legacy function for backward compatibility)
- * @param {Array} taskData - Formatted task data
- * @returns {string} JSON formatted string
- */
-export function formatAsJSON(taskData) {
-  return JSON.stringify(
-    {
-      exportedAt: new Date().toISOString(),
-      totalTasks: taskData.length,
-      tasks: taskData
     },
     null,
     2
