@@ -99,7 +99,6 @@ router.get('/:exportId/download', async (req, res, next) => {
   try {
     const { exportId } = req.params;
     const exportData = await ExportService.getExportData(exportId);
-    console.dir({ exportData }, { depth: null });
 
     res.setHeader('Content-Type', exportData.mimeType);
     res.setHeader(
