@@ -11,7 +11,7 @@
       </v-card-title>
 
       <v-card-text>
-        <v-form ref="form" v-model="valid" @submit.prevent="save">
+        <v-form ref="form" v-model="valid">
           <v-text-field
             v-model="formData.title"
             label="Title"
@@ -84,7 +84,7 @@
         <v-btn
           color="primary"
           :loading="loading"
-          :disabled="!valid"
+          :disabled="!valid || loading"
           @click="save"
         >
           {{ isEdit ? 'Update' : 'Create' }}
@@ -183,6 +183,9 @@ function cancel() {
 }
 
 async function save() {
+  // Prevent multiple simultaneous saves
+  if (loading.value) return
+  
   if (!form.value?.validate()) return
 
   loading.value = true
@@ -200,6 +203,7 @@ async function save() {
     }
 
     emit('save')
+    emit('update:modelValue', false)
     resetForm()
   } catch (error) {
     console.error('Error saving task:', error)

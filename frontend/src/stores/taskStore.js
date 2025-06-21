@@ -260,9 +260,6 @@ export const useTaskStore = defineStore('tasks', () => {
     try {
       const response = await apiClient.createTask(taskData)
 
-      tasks.value.unshift(response.data)
-      pagination.value.total++
-
       return response.data
     } catch (err) {
       error.value = err.message
@@ -288,11 +285,6 @@ export const useTaskStore = defineStore('tasks', () => {
     try {
       const response = await apiClient.updateTask(id, updates)
 
-      const index = tasks.value.findIndex((task) => task._id === id)
-      if (index !== -1) {
-        tasks.value[index] = response.data
-      }
-
       return response.data
     } catch (err) {
       error.value = err.message
@@ -316,12 +308,6 @@ export const useTaskStore = defineStore('tasks', () => {
 
     try {
       await apiClient.deleteTask(id)
-
-      const index = tasks.value.findIndex((task) => task._id === id)
-      if (index !== -1) {
-        tasks.value.splice(index, 1)
-        pagination.value.total--
-      }
     } catch (err) {
       error.value = err.message
       console.error('Error deleting task:', err)

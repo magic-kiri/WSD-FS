@@ -236,19 +236,12 @@ const deleteTask = (task) => {
   showDeleteDialog.value = true
 }
 
-const handleSave = async (taskData) => {
-  try {
-    if (selectedTask.value?._id) {
-      await taskStore.updateTask(selectedTask.value._id, taskData)
-    } else {
-      await taskStore.createTask(taskData)
-    }
-    showCreateDialog.value = false
-    showEditDialog.value = false
-    selectedTask.value = null
-  } catch (error) {
-    console.error('Error saving task:', error)
-  }
+const handleSave = async () => {
+  // TaskFormDialog already handles the API call
+  // We just need to close the dialogs and reset state
+  showCreateDialog.value = false
+  showEditDialog.value = false
+  selectedTask.value = null
 }
 
 const confirmDelete = async () => {
