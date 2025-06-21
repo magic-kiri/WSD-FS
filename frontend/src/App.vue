@@ -92,7 +92,12 @@ const showNotifications = ref(false)
 const menuItems = [
   { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/' },
   { title: 'Tasks', icon: 'mdi-format-list-checks', to: '/tasks' },
-  { title: 'Analytics', icon: 'mdi-chart-line', to: '/analytics' }
+  { title: 'Analytics', icon: 'mdi-chart-line', to: '/analytics' },
+  {
+    title: 'Export History',
+    icon: 'mdi-download-multiple',
+    to: '/export-history'
+  }
 ]
 
 const themeIcon = computed(() =>

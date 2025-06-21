@@ -73,7 +73,14 @@
         <quick-task-list />
       </v-col>
       <v-col cols="12" md="4">
-        <recent-activity />
+        <v-row>
+          <v-col cols="12">
+            <recent-activity />
+          </v-col>
+          <v-col cols="12">
+            <export-history-panel />
+          </v-col>
+        </v-row>
       </v-col>
     </v-row>
   </div>
@@ -88,6 +95,7 @@ import TaskStatusChart from '../components/TaskStatusChart.vue'
 import TaskPriorityChart from '../components/TaskPriorityChart.vue'
 import QuickTaskList from '../components/QuickTaskList.vue'
 import RecentActivity from '../components/RecentActivity.vue'
+import ExportHistoryPanel from '../components/ExportHistoryPanel.vue'
 
 const analyticsStore = useAnalyticsStore()
 const taskStore = useTaskStore()

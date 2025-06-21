@@ -141,10 +141,12 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useTaskStore } from '../stores/taskStore.js'
+import { useFilterUrl } from '../composables/useFilterUrl.js'
 import TaskFormDialog from './TaskFormDialog.vue'
 import FilterBar from './FilterBar.vue'
 
 const taskStore = useTaskStore()
+const { initializeFromUrl } = useFilterUrl()
 
 const showCreateDialog = ref(false)
 const showEditDialog = ref(false)
@@ -226,9 +228,16 @@ const confirmDelete = async () => {
 }
 
 onMounted(() => {
-  // Initialize socket listeners and URL state
+  // Initialize socket listeners
   taskStore.initializeSocketListeners()
-  // URL initialization is handled by the useFilterUrl composable
+
+  // Initialize URL filters - this will also trigger fetchTasks
+  initializeFromUrl()
+
+  // If no URL filters and no tasks loaded, fetch with default filters
+  if (taskStore.tasks.length === 0 && !taskStore.loading) {
+    taskStore.fetchTasks()
+  }
 })
 
 onUnmounted(() => {

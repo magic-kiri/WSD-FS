@@ -95,9 +95,11 @@
 import { ref, computed } from 'vue'
 import { useTaskStore } from '../stores/taskStore.js'
 import { useFilterUrl } from '../composables/useFilterUrl.js'
+import { useExportStore } from '../stores/exportStore.js'
 
 const taskStore = useTaskStore()
 const { getShareableUrl } = useFilterUrl()
+const exportStore = useExportStore()
 
 const shareDialog = ref(false)
 const exportDialog = ref(false)
@@ -198,53 +200,76 @@ const generateFilename = (extension) => {
 }
 
 /**
- * Exports tasks as CSV
+ * Exports tasks as CSV using the new export system
  */
 const exportAsCSV = async () => {
   exportDialog.value = true
 
   try {
-    const data = prepareExportData()
-    const csv = arrayToCSV(data)
-    const filename = generateFilename('csv')
+    const exportData = {
+      format: 'csv',
+      filters: taskStore.getFilterState(),
+      options: {
+        totalTasks: taskStore.pagination.total,
+        exportedTasks: taskStore.tasks.length
+      }
+    }
 
-    // Small delay to show progress
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    downloadFile(csv, filename, 'text/csv')
+    // Use the export store for better tracking
+    await exportStore.initiateExport(exportData)
   } catch (error) {
     console.error('Error exporting CSV:', error)
-    // Could add error notification here
+
+    // Fallback to direct download on error
+    try {
+      const data = prepareExportData()
+      const csv = arrayToCSV(data)
+      const filename = generateFilename('csv')
+      downloadFile(csv, filename, 'text/csv')
+    } catch (fallbackError) {
+      console.error('Fallback export also failed:', fallbackError)
+    }
   } finally {
     exportDialog.value = false
   }
 }
 
 /**
- * Exports tasks as JSON
+ * Exports tasks as JSON using the new export system
  */
 const exportAsJSON = async () => {
   exportDialog.value = true
 
   try {
-    const data = {
-      exportDate: new Date().toISOString(),
+    const exportData = {
+      format: 'json',
       filters: taskStore.getFilterState(),
-      totalTasks: taskStore.pagination.total,
-      exportedTasks: taskStore.tasks.length,
-      tasks: prepareExportData()
+      options: {
+        totalTasks: taskStore.pagination.total,
+        exportedTasks: taskStore.tasks.length
+      }
     }
 
-    const json = JSON.stringify(data, null, 2)
-    const filename = generateFilename('json')
-
-    // Small delay to show progress
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    downloadFile(json, filename, 'application/json')
+    // Use the export store for better tracking
+    await exportStore.initiateExport(exportData)
   } catch (error) {
     console.error('Error exporting JSON:', error)
-    // Could add error notification here
+
+    // Fallback to direct download on error
+    try {
+      const data = {
+        exportDate: new Date().toISOString(),
+        filters: taskStore.getFilterState(),
+        totalTasks: taskStore.pagination.total,
+        exportedTasks: taskStore.tasks.length,
+        tasks: prepareExportData()
+      }
+      const json = JSON.stringify(data, null, 2)
+      const filename = generateFilename('json')
+      downloadFile(json, filename, 'application/json')
+    } catch (fallbackError) {
+      console.error('Fallback export also failed:', fallbackError)
+    }
   } finally {
     exportDialog.value = false
   }

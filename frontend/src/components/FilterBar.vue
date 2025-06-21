@@ -114,6 +114,16 @@
                   </v-list-item>
                 </v-list>
               </v-menu>
+
+              <v-btn
+                color="success"
+                variant="outlined"
+                :disabled="taskStore.pagination.total === 0"
+                @click="showExportModal = true"
+              >
+                <v-icon left>mdi-download</v-icon>
+                Export
+              </v-btn>
             </div>
           </v-col>
         </v-row>
@@ -267,6 +277,9 @@
         </v-card-text>
       </v-card>
     </div>
+
+    <!-- Export Modal -->
+    <export-modal v-model="showExportModal" />
   </div>
 </template>
 
@@ -274,10 +287,12 @@
 import { ref, reactive, watch, onMounted } from 'vue'
 import { useTaskStore } from '../stores/taskStore.js'
 import { STATUS_OPTIONS, PRIORITY_OPTIONS } from '../constants/taskEnums.js'
+import ExportModal from './ExportModal.vue'
 
 const taskStore = useTaskStore()
 
 const showAdvanced = ref(false)
+const showExportModal = ref(false)
 
 // Local filters for v-model binding
 const localFilters = reactive({
