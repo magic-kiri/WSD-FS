@@ -7,10 +7,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "test": "node --test 'tests/middleware/*.test.js' 'tests/config/*.test.js' 'tests/routes/*.test.js' 'tests/models/*.unit.test.js' 'tests/services/*.unit.test.js' 'tests/services/*.logic.test.js' 'tests/sockets/*.logic.test.js' 'tests/index.unit.test.js' 'tests/unit-coverage.test.js'",
-    "test:unit": "node --test 'tests/middleware/*.test.js' 'tests/config/*.test.js' 'tests/routes/*.test.js' 'tests/models/*.unit.test.js' 'tests/services/*.unit.test.js' 'tests/services/*.logic.test.js' 'tests/sockets/*.logic.test.js' 'tests/index.unit.test.js' 'tests/unit-coverage.test.js'",
-    "test:all": "node --test",
-    "test:coverage": "c8 --reporter=text --reporter=html --reporter=lcov node --test 'tests/middleware/*.test.js' 'tests/config/*.test.js' 'tests/routes/*.test.js' 'tests/models/*.unit.test.js' 'tests/services/*.unit.test.js' 'tests/services/*.logic.test.js' 'tests/sockets/*.logic.test.js' 'tests/index.unit.test.js' 'tests/unit-coverage.test.js'",
+    "test": "node --test tests/**/*.test.js",
+    "test:coverage": "c8 --reporter=text --reporter=html --reporter=lcov node --test tests/**/*.test.js",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "seed": "node scripts/seed-tasks.js",
