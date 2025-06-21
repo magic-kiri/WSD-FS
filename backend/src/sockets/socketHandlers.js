@@ -110,8 +110,6 @@ class SocketHandlers {
       message,
       timestamp: new Date().toISOString()
     });
-
-    console.log(`📊 Export ${exportId}: ${progress}% - ${message}`);
   }
 
   /**
