@@ -43,7 +43,7 @@ defineProps({
 
 .metric-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 8px 25px rgba(var(--v-theme-on-surface), 0.15) !important;
 }
 
 .metric-value {
@@ -54,7 +54,7 @@ defineProps({
 
 .metric-label {
   font-size: 0.875rem;
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(var(--v-theme-on-surface), 0.6);
   font-weight: 500;
   margin-top: 4px;
 }

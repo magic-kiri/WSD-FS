@@ -107,7 +107,7 @@ function getPriorityColor(priority) {
 
 <style scoped>
 .task-item-mini {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.05);
 }
 
 .task-item-mini:last-child {

@@ -252,7 +252,7 @@ const formatTimeAgo = (timestamp) => {
 }
 
 .activity-item {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.05);
   transition: background-color 0.2s ease;
 }
 
@@ -261,7 +261,7 @@ const formatTimeAgo = (timestamp) => {
 }
 
 .activity-item:hover {
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: rgba(var(--v-theme-on-surface), 0.02);
 }
 
 .activity-avatar {
@@ -294,7 +294,7 @@ const formatTimeAgo = (timestamp) => {
 }
 
 .activity-time {
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(var(--v-theme-on-surface), 0.6);
 }
 
 .activity-status-chip {
