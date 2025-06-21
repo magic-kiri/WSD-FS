@@ -420,6 +420,7 @@ describe('Task Store Advanced Filtering', () => {
       expect(state).toEqual({
         status: ['pending'],
         priority: ['high'],
+        text: '',
         createdFrom: '2024-01-01',
         createdTo: null,
         completedFrom: null,

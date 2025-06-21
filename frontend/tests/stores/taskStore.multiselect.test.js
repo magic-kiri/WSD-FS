@@ -323,6 +323,7 @@ describe('Task Store Multi-Select Filter Functionality', () => {
     expect(taskStore.filters).toEqual({
       status: ['pending', 'in-progress'],
       priority: ['high', 'medium'],
+      text: '',
       createdFrom: null,
       createdTo: null,
       completedFrom: null,

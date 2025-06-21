@@ -295,8 +295,9 @@ describe('FilterBar Component', () => {
       await advancedButton.trigger('click')
       await wrapper.vm.$nextTick()
 
-      const textFields = wrapper.findAll('[data-testid="v-text-field"]')
-      const createdFromInput = textFields[0].find('[data-testid="text-input"]')
+      // Find date inputs by their type attribute
+      const dateInputs = wrapper.findAll('input[type="date"]')
+      const createdFromInput = dateInputs[0] // First date input should be createdFrom
 
       await createdFromInput.setValue('2024-01-01')
       await createdFromInput.trigger('input')
