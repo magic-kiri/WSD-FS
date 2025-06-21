@@ -28,6 +28,11 @@ export function useFilterUrl() {
   const serializeFilters = (filters) => {
     const query = {}
 
+    // Handle text search
+    if (filters.text && filters.text.trim()) {
+      query.text = filters.text.trim()
+    }
+
     // Handle arrays (status, priority)
     if (filters.status?.length > 0) {
       query.status = filters.status.join(',')
@@ -79,6 +84,7 @@ export function useFilterUrl() {
    */
   const deserializeFilters = (query) => {
     const filters = {
+      text: '',
       status: [],
       priority: [],
       createdFrom: null,
@@ -87,6 +93,11 @@ export function useFilterUrl() {
       completedTo: null,
       sortBy: 'createdAt',
       sortOrder: 'desc'
+    }
+
+    // Parse text search
+    if (query.text) {
+      filters.text = query.text
     }
 
     // Parse arrays
